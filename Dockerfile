@@ -16,4 +16,4 @@ FROM openjdk:11.0-jre-slim-buster
 VOLUME /tmp
 COPY --from=build /usr/app/build/libs/*.jar app.jar
 
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
