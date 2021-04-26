@@ -21,9 +21,6 @@ configurations {
 
 checkstyle {
     toolVersion "8.18"
-    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
-    ignoreFailures false
-    showViolations true
 }
 
 jacocoTestReport {
@@ -36,13 +33,6 @@ jacocoTestReport {
 repositories {
     mavenCentral()
     mavenLocal()
-}
-
-docker {
-    name "gimme5"
-    dockerfile file('src/docker/Dokcerfile')
-    copySpec.from(jar).rename(".*", "app.jar")
-    buildArgs(['JAR_FILE': "app.jar"])
 }
 
 dependencies {
