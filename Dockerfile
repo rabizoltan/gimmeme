@@ -6,7 +6,11 @@ WORKDIR $APP_HOME
 COPY build.gradle gradlew settings.gradle $APP_HOME
 COPY gradle gradle
 
-RUN sh ./gradlew -PprojVersion=$version build -x checkstyleMain -x checkstyleTest -x bootJar -x test
+RUN gradlew build -x bootJar -x test --continue
+
+COPY src src
+
+RUN gradlew -PprojVersion=$version build -x checkstyleMain -x checkstyleTest
 
 FROM openjdk:11.0-jre-slim-buster
 VOLUME /tmp
