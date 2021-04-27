@@ -1,11 +1,12 @@
 package hu.takefive.gimmeme.handlers;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.SlashCommandRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
 import hu.takefive.gimmeme.services.FileService;
-import lombok.var;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -82,5 +83,13 @@ public class SlackFileHandler {
     }
 
   }
+
+  public Response greetings(SlashCommandRequest req, Context ctx) {
+    System.out.println(req.getPayload().toString());
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("channelId", req.getPayload().getChannelId());
+    jsonObject.addProperty("text", ":wave: Greetings traveler!");
+    return ctx.ack(jsonObject);
+  };
 
 }

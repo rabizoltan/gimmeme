@@ -21,8 +21,9 @@ public class SlackAppConfig {
 
     app.command("/listFiles", slackFileHandler::listFiles);
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
+    app.command("/greetings", slackFileHandler::greetings);
 
-    app.command("/gimmeme", slackViewHandler::buildView);
+    app.command("/rabi-gimmeme", slackViewHandler::buildView);
     app.blockAction("pickTemplate", slackViewHandler::updateView);
 
     return app;

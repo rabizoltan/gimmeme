@@ -8,7 +8,6 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
-import lombok.var;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
