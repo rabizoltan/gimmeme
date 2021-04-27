@@ -22,7 +22,7 @@ public class SlackApp {
     app.command("/listFiles", slackFileHandler::listFiles);
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
 
-    app.command("/walami", slackViewHandler::buildView);
+    app.command("/gimmeme", slackViewHandler::buildView);
     app.blockAction("pickTemplate", slackViewHandler::updateView);
 
     return app;
