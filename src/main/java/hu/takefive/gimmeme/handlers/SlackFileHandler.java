@@ -6,7 +6,11 @@ import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.SlashCommandRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.files.FilesListResponse;
+import com.slack.api.methods.response.files.FilesSharedPublicURLResponse;
+import com.slack.api.methods.response.files.FilesUploadResponse;
 import hu.takefive.gimmeme.services.FileService;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -21,10 +25,10 @@ public class SlackFileHandler {
   FileService fileService;
 
   public Response listFiles(SlashCommandRequest req, Context ctx) {
-    var logger = ctx.logger;
+    Logger logger = ctx.logger;
 
     try {
-      var fileListResponse = ctx.client().filesList (r -> r
+      FilesListResponse fileListResponse = ctx.client().filesList (r -> r
           .token(ctx.getBotToken())
       );
       logger.info("fileListResponse: {}", fileListResponse);
@@ -37,13 +41,13 @@ public class SlackFileHandler {
   }
 
   public Response uploadFiles(SlashCommandRequest req, Context ctx) {
-    var logger = ctx.logger;
+    Logger logger = ctx.logger;
 
     try {
       List<File> staticFileList = getStaticFileList();
 
       for (File file : staticFileList) {
-        var filesUploadResponse = ctx.client().filesUpload(r -> r
+        FilesUploadResponse filesUploadResponse = ctx.client().filesUpload(r -> r
             .token(System.getenv("SLACK_BOT_TOKEN"))
             .channels(Arrays.asList(req.getPayload().getChannelId()))
             .initialComment("Here's my file :smile:")
@@ -52,7 +56,7 @@ public class SlackFileHandler {
         );
         logger.info("filesUploadResponse: {}", filesUploadResponse);
 
-        var filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
+        FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
             .token(System.getenv("SLACK_USER_TOKEN"))
             .file(filesUploadResponse.getFile().getId())
         );

@@ -1,13 +1,17 @@
 package hu.takefive.gimmeme.handlers;
 
+import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
 import com.slack.api.bolt.request.builtin.SlashCommandRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.views.ViewsOpenResponse;
+import com.slack.api.methods.response.views.ViewsUpdateResponse;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,13 +30,13 @@ import static com.slack.api.model.block.element.BlockElements.button;
 public class SlackViewHandler {
 
   public Response buildView(SlashCommandRequest req, Context ctx) {
-    var logger = ctx.logger;
+    Logger logger = ctx.logger;
 
     try {
-      var payload = req.getPayload();
-      var externalId = payload.getUserId() + System.currentTimeMillis();
+      SlashCommandPayload payload = req.getPayload();
+      String externalId = payload.getUserId() + System.currentTimeMillis();
 
-      var viewsOpenResponse = ctx.client()
+      ViewsOpenResponse viewsOpenResponse = ctx.client()
           .viewsOpen(r -> r
               .token(System.getenv("SLACK_BOT_TOKEN"))
               .triggerId(payload.getTriggerId())
@@ -48,12 +52,12 @@ public class SlackViewHandler {
   }
 
   public Response updateView(BlockActionRequest req, Context ctx) {
-    var logger = ctx.logger;
+    Logger logger = ctx.logger;
 
     try {
       String externalId = req.getPayload().getView().getExternalId();
 
-      var viewsUpdateResponse = ctx.client()
+      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
           .viewsUpdate(r -> r
               .externalId(externalId)
               .view(buildNextView())
