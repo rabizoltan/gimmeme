@@ -4,6 +4,7 @@ import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.SlashCommandRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
+import hu.takefive.gimmeme.services.FileService;
 import lombok.var;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,8 @@ import java.util.List;
 
 @Service
 public class SlackFileHandler {
+
+  FileService fileService;
 
   public Response listFiles(SlashCommandRequest req, Context ctx) {
     var logger = ctx.logger;
@@ -37,7 +40,6 @@ public class SlackFileHandler {
 
     try {
       List<File> staticFileList = getStaticFileList();
-      System.out.println(getStaticFileList());
 
       for (File file : staticFileList) {
         var filesUploadResponse = ctx.client().filesUpload(r -> r
@@ -53,6 +55,7 @@ public class SlackFileHandler {
             .token(System.getenv("SLACK_USER_TOKEN"))
             .file(filesUploadResponse.getFile().getId())
         );
+        fileService.getFiles().add(filesSharedPublicURLResponse.getFile());
         logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
       }
 
