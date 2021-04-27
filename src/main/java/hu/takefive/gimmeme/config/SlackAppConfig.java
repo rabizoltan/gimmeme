@@ -1,4 +1,4 @@
-package hu.takefive.gimmeme;
+package hu.takefive.gimmeme.config;
 
 import com.slack.api.bolt.App;
 import hu.takefive.gimmeme.handlers.SlackFileHandler;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @AllArgsConstructor
-public class SlackApp {
+public class SlackAppConfig {
 
   SlackFileHandler slackFileHandler;
   SlackViewHandler slackViewHandler;
