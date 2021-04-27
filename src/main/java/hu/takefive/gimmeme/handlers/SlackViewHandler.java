@@ -11,6 +11,7 @@ import lombok.var;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Date;
 
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.Blocks.asBlocks;
@@ -31,11 +32,13 @@ public class SlackViewHandler {
 
     try {
       var payload = req.getPayload();
+      var externalId = payload.getUserId() + new Date();
+      System.out.println(externalId);
 
       var viewsOpenResponse = ctx.client().viewsOpen(r -> r
           .token(System.getenv("SLACK_BOT_TOKEN"))
           .triggerId(payload.getTriggerId())
-          .view(buildSelectImageView())
+          .view(buildSelectImageView(externalId))
       );
       logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
@@ -46,11 +49,13 @@ public class SlackViewHandler {
     return ctx.ack();
   }
 
-  private View buildSelectImageView() {
+  private View buildSelectImageView(String externalId) {
     View view = new View();
     view.setType("modal");
     view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimme 5").build()));
     view.setCallbackId("template-selected");
+    view.setExternalId(externalId);
+//    view.setPrivateMetadata("666");
 
     view.
         setBlocks(asBlocks(
