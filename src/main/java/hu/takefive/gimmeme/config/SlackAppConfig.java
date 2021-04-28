@@ -24,10 +24,15 @@ public class SlackAppConfig {
 
     app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);
 
-    app.blockAction("text-top", slackViewHandler::handleInputTextView);
-    app.blockAction("text-bottom", slackViewHandler::handleInputTextView);
-    app.blockAction("text-middle", slackViewHandler::handleInputTextView);
-    app.blockAction("text-both", slackViewHandler::handleInputTextView);
+    app.blockAction("text-top", slackViewHandler::handleSelectFontView);
+    app.blockAction("text-bottom", slackViewHandler::handleSelectFontView);
+    app.blockAction("text-middle", slackViewHandler::handleSelectFontView);
+    app.blockAction("text-both", slackViewHandler::handleSelectFontView);
+
+    app.blockAction("Trade Winds", slackViewHandler::handleInputTextView);
+    app.blockAction("Londrina Shadow", slackViewHandler::handleInputTextView);
+    app.blockAction("Fascinate Inline", slackViewHandler::handleInputTextView);
+    app.blockAction("Kranky", slackViewHandler::handleInputTextView);
 
     app.viewSubmission("generate-meme", slackViewHandler::handleViewSubmission);
 
