@@ -17,7 +17,6 @@ import static com.slack.api.model.block.element.BlockElements.button;
 import static com.slack.api.model.block.element.BlockElements.plainTextInput;
 import static com.slack.api.model.view.Views.viewSubmit;
 
-//TODO finish all Views (nb: actionId <-> value)
 public class ViewFactory {
 
   public static View buildSelectLayoutView(String imageUrl, String channelId, String fileType) {
@@ -30,26 +29,22 @@ public class ViewFactory {
     view.setPrivateMetadata(privateMetadataUrlJson);
 
     view.setBlocks(asBlocks(
-        section(section -> section.text(markdownText("*Please choose a meme layout:*"))),
-        divider(),
-        image(imageElementBuilder -> imageElementBuilder.imageUrl(imageUrl).altText("text-top")),
+        //TODO implement logic to upload layout-templates (no hardcoding here!)
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c").altText("template-1")),
         actions(actions -> actions
             .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Choose layout"))).actionId("text-top").value("XXX"))
+                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme layout!"))).actionId("text-top").value("text-top")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme layout!"))).actionId("text-middle").value("text-middle"))
             ))
         ),
         divider(),
-        image(imageElementBuilder -> imageElementBuilder.imageUrl(imageUrl).altText("text-bottom")),
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6").altText("template-2")),
         actions(actions -> actions
             .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Choose layout"))).actionId("text-bottom").value("pickTemplate"))
-            ))
-        ),
-        divider(),
-        image(imageElementBuilder -> imageElementBuilder.imageUrl(imageUrl).altText("text-middle")),
-        actions(actions -> actions
-            .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Choose layout"))).actionId("text-middle").value("pickTemplate"))
+                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme layout!"))).actionId("text-both").value("text-both")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme layout!"))).actionId("text-bottom").value("text-bottom"))
             ))
         )
     ));
