@@ -2,7 +2,6 @@ package hu.takefive.gimmeme.config;
 
 import com.slack.api.bolt.App;
 import hu.takefive.gimmeme.handlers.SlackFileHandler;
-import hu.takefive.gimmeme.handlers.SlackMessageHandler;
 import hu.takefive.gimmeme.handlers.SlackViewHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -14,26 +13,23 @@ public class SlackAppConfig {
 
   SlackFileHandler slackFileHandler;
   SlackViewHandler slackViewHandler;
-  SlackMessageHandler slackMessageHandler;
 
   @Bean
   public App initSlackApp() {
 
     App app = new App();
 
-    app.command("/listFiles", slackFileHandler::listFiles);
-    app.command("/uploadfiles", slackFileHandler::uploadFiles);
-    app.command("/greetings", slackMessageHandler::greetings);
+    app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);
 
-    app.command("/rabi-gimmeme", slackViewHandler::buildView);
-    app.blockAction("pickTemplate", slackViewHandler::updateView);
+    //TODO refactor: 1 action is enough, instead of actionId, view.block.value could be unique
+    app.blockAction("text-top", slackViewHandler::handleInputTextView);
+    app.blockAction("text-bottom", slackViewHandler::handleInputTextView);
+    app.blockAction("text-middle", slackViewHandler::handleInputTextView);
+
+    app.viewSubmission("generate-meme", slackViewHandler::handleViewSubmission);
 
     return app;
-  }
 
-//    app.messageShortcut("template-selected", (req, ctx) -> {
-//      System.out.println(req.getPayload().toString());
-//      return ctx.ack();
-//    });
+  }
 
 }

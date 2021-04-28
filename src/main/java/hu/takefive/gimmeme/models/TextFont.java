@@ -6,7 +6,12 @@ import java.io.File;
 public enum TextFont {
   ARIAL (
       "Arial",
-      "",
+      "Arial.ttf",
+      ""),
+
+  FASCINATE_INLINE (
+      "Fascinate Inline",
+      "FascinateInline.ttf",
       ""),
 
   LONDRINA_SHADOW (
@@ -66,7 +71,7 @@ public enum TextFont {
 
   public boolean hasPreview() {
     return fontPreview != null
-        && !fontPreview.isBlank()
+        && !fontPreview.trim().equals("")
         && new File(FONT_PREVIEW_PATH + fontPreview).isFile();
   }
 

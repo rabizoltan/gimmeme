@@ -56,7 +56,7 @@ public class SlackMessageHandler {
     );
   }
 
-  public Response help(SlashCommandRequest req, Context ctx) throws FileNotFoundException {
-
-  }
+//  public Response help(SlashCommandRequest req, Context ctx) throws FileNotFoundException {
+//
+//  }
 }

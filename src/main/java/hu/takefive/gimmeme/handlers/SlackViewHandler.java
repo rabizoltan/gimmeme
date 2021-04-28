@@ -1,47 +1,65 @@
 package hu.takefive.gimmeme.handlers;
 
-import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.slack.api.app_backend.interactive_components.payload.MessageShortcutPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
-import com.slack.api.bolt.request.builtin.SlashCommandRequest;
+import com.slack.api.bolt.request.builtin.MessageShortcutRequest;
+import com.slack.api.bolt.request.builtin.ViewSubmissionRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.files.FilesSharedPublicURLResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.methods.response.views.ViewsUpdateResponse;
-import com.slack.api.model.block.composition.PlainTextObject;
-import com.slack.api.model.view.View;
-import com.slack.api.model.view.ViewTitle;
+import com.slack.api.model.File;
+import com.slack.api.model.view.ViewState;
+import hu.takefive.gimmeme.services.ImageFactory;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import static com.slack.api.model.block.Blocks.actions;
-import static com.slack.api.model.block.Blocks.asBlocks;
-import static com.slack.api.model.block.Blocks.divider;
-import static com.slack.api.model.block.Blocks.image;
-import static com.slack.api.model.block.Blocks.section;
-import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
-import static com.slack.api.model.block.composition.BlockCompositions.plainText;
-import static com.slack.api.model.block.element.BlockElements.asElements;
-import static com.slack.api.model.block.element.BlockElements.button;
+import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
+import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 
 @Service
+@AllArgsConstructor
 public class SlackViewHandler {
 
-  public Response buildView(SlashCommandRequest req, Context ctx) {
+  SlackFileHandler slackFileHandler;
+
+  public Response handleSelectLayoutView(MessageShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
+    File uploadedFile;
 
     try {
-      SlashCommandPayload payload = req.getPayload();
-      String externalId = payload.getUserId() + System.currentTimeMillis();
+      MessageShortcutPayload payload = req.getPayload();
+      String teamId = payload.getTeam().getId();
+      String channelId = payload.getChannel().getId();
+
+      FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
+          .token(System.getenv("SLACK_USER_TOKEN"))
+          .file(payload.getMessage().getFiles().get(0).getId())
+      );
+      logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
+
+      if (!filesSharedPublicURLResponse.isOk()) {
+        uploadedFile = payload.getMessage().getFiles().get(0);
+      } else {
+        uploadedFile = filesSharedPublicURLResponse.getFile();
+      }
+      String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
 
       ViewsOpenResponse viewsOpenResponse = ctx.client()
           .viewsOpen(r -> r
               .token(System.getenv("SLACK_BOT_TOKEN"))
               .triggerId(payload.getTriggerId())
-              .view(buildSelectImageView(externalId))
+              .view(buildSelectLayoutView(permaLinkPublic, channelId))
           );
+
       logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
     } catch (IOException | SlackApiException e) {
@@ -51,16 +69,22 @@ public class SlackViewHandler {
     return ctx.ack();
   }
 
-  public Response updateView(BlockActionRequest req, Context ctx) {
+  public Response handleInputTextView(BlockActionRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
     try {
-      String externalId = req.getPayload().getView().getExternalId();
+      String privateMetaData = req.getPayload().getView().getPrivateMetadata();
+      String actionId = req.getPayload().getActions().get(0).getActionId();
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map<String, Object> privateMetaDataMap = objectMapper.readValue(privateMetaData, HashMap.class);
+      privateMetaDataMap.put("actionId", actionId);
+      String privateMetaDataJson = objectMapper.writeValueAsString(privateMetaDataMap);
 
       ViewsUpdateResponse viewsUpdateResponse = ctx.client()
           .viewsUpdate(r -> r
-              .externalId(externalId)
-              .view(buildNextView())
+              .viewId(req.getPayload().getView().getId())
+              .view(buildInputTextView(privateMetaDataJson))
           );
       logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
@@ -71,60 +95,39 @@ public class SlackViewHandler {
     return ctx.ack();
   }
 
-  private View buildSelectImageView(String externalId) {
-    View view = new View();
-    view.setType("modal");
-    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimme 5").build()));
-    view.setCallbackId("template-selected");
-    view.setExternalId(externalId);
+  public Response handleViewSubmission(ViewSubmissionRequest req, Context ctx) {
+    Logger logger = ctx.logger;
 
-    view.
-        setBlocks(asBlocks(
-            section(section -> section.text(markdownText("*Please choose a meme template:*"))),
-            divider(),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://lh3.googleusercontent.com/cvfpnTKw3B67DtM1ZpJG2PNAIjP6hVMOyYy403X4FMkOuStgG1y4cjCn21vmTnnsip1dTZSVsWBA9IxutGuA3dVDWhg=w128-h128-e365-rj-sc0x00ffffff").altText("pepe")),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://wallup.net/wp-content/uploads/2017/11/22/389070-Pepe_meme-FeelsBadMan-memes.jpg").altText("pepe")),
-            actions(actions -> actions
-                .elements(asElements(
-                    button(b -> b.text(plainText(pt -> pt.emoji(true).text("Choose long text here bro! Choose long text here bro!"))).actionId("pickTemplate").value("pickTemplate"))
-                ))
-            ),
-            divider(),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01UY5RTR9D/1111.jpg?pub_secret=d0a8b00875").altText("pepe")),
-            actions(actions -> actions
-                .elements(asElements(
-                    button(b -> b.text(plainText(pt -> pt.emoji(true).text("Choose"))).actionId("v2").value("v2"))
-                ))
-            ),
-            divider(),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBCKFELA/gimme-five.png?pub_secret=f01b0adf40").altText("pepe")),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01UY5RTR9D/1111.jpg?pub_secret=d0a8b00875").altText("pepe")),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020NA985LY/3.jpg?pub_secret=3557b740a2").altText("pepe"))));
+    String privateMetadata = req.getPayload().getView().getPrivateMetadata();
+    Map<String, Map<String, ViewState.Value>> stateValues = req.getPayload().getView().getState().getValues();
+    String text = stateValues.get("text-block").get("text-input").getValue();
 
-    return view;
+    //TODO figure this out
+//    Map<String, String> errors = new HashMap<>();
+//    if (!errors.isEmpty()) {
+//      return ctx.ack(r -> r.responseAction("errors").errors(errors));
+//    } else {
+
+      try {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
+
+        Thread memGenThread = new Thread(() -> {
+          java.io.File file = ImageFactory.writeTextToImage(
+              submissionData.get("imageUrl").toString(),
+              submissionData.get("actionId").toString(),
+              "Arial",
+              text
+          );
+          slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());
+        });
+        memGenThread.start();
+
+      } catch (IOException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+
+      return ctx.ack();
+    }
+
   }
-
-  private View buildNextView() {
-    View view = new View();
-    view.setType("modal");
-    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimme 5").build()));
-    view.setCallbackId("template-selected");
-
-    view.
-        setBlocks(asBlocks(
-            section(section -> section.text(markdownText("*Compose your mem!*"))),
-            divider(),
-            image(imageElementBuilder -> imageElementBuilder.imageUrl("https://lh3.googleusercontent.com/cvfpnTKw3B67DtM1ZpJG2PNAIjP6hVMOyYy403X4FMkOuStgG1y4cjCn21vmTnnsip1dTZSVsWBA9IxutGuA3dVDWhg=w128-h128-e365-rj-sc0x00ffffff").altText("pepe")),
-            actions(actions -> actions
-                .elements(asElements(
-                    button(b -> b.text(plainText(pt -> pt.emoji(true).text("Go!"))).actionId("v1").value("v1"))
-                ))
-            )
-        ));
-
-    return view;
-  }
-
-
-
-}
