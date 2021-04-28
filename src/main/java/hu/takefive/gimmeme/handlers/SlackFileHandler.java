@@ -40,7 +40,6 @@ public class SlackFileHandler {
   }
 
   public Response listFiles(SlashCommandRequest req, Context ctx) {
-    System.out.println("listF");
     Logger logger = ctx.logger;
 
     try {
