@@ -7,7 +7,6 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.files.FilesListResponse;
 import com.slack.api.methods.response.files.FilesSharedPublicURLResponse;
 import com.slack.api.methods.response.files.FilesUploadResponse;
-import hu.takefive.gimmeme.services.FileService;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,25 @@ import java.util.List;
 @Service
 public class SlackFileHandler {
 
-  FileService fileService;
+  public Response uploadFile(Context ctx, File file, String channelId) {
+    Logger logger = ctx.logger;
+
+    try {
+      FilesUploadResponse filesUploadResponse = ctx.client().filesUpload(r -> r
+          .token(System.getenv("SLACK_BOT_TOKEN"))
+          .channels(Arrays.asList(channelId))
+          .initialComment("Here's my file :smile:")
+          .file(file)
+          .filename(file.getName())
+      );
+      logger.info("filesUploadResponse: {}", filesUploadResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
+
+    return ctx.ack();
+  }
 
   public Response listFiles(SlashCommandRequest req, Context ctx) {
     Logger logger = ctx.logger;
@@ -58,7 +75,6 @@ public class SlackFileHandler {
             .token(System.getenv("SLACK_USER_TOKEN"))
             .file(filesUploadResponse.getFile().getId())
         );
-        fileService.getFiles().add(filesSharedPublicURLResponse.getFile());
         logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
       }
 
