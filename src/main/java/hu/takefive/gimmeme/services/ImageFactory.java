@@ -71,7 +71,7 @@ public class ImageFactory {
     boolean isBgDark = isImageDark(image, bgShape);
 
     int textBgColor = isBgDark ? 0 : 255;
-    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 64));
+    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 84));
     g2dText.fillRect(bgShape[0], bgShape[1], bgShape[2], bgShape[3]);
 
     g2dText.setColor(isBgDark ? Color.WHITE : Color.BLACK);

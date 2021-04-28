@@ -22,8 +22,6 @@ public class FontConfig {
       if (!isFontInstalled(font.getFontName()))
         this.registerFont(font);
     }
-
-    System.out.println(Arrays.toString(localGE.getAvailableFontFamilyNames()));
   }
 
   private boolean isFontInstalled(String fontName) {
