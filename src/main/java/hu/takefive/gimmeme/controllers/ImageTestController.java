@@ -13,9 +13,9 @@ public class ImageTestController {
     String url = "https://slack-files.com/files-pri/T0202GRF98C-F020NA985LY/3.jpg?pub_secret=3557b740a2";
     ImageFactory.writeTextToImage(
         url,
-        "text-bottom",
+        "text-middle",
         "Londrina Shadow",
-        "It's a very funny text");
+        "It's a very funny top text\nAnd bottom text");
 
     return "Image saved";
   }

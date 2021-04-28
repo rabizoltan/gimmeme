@@ -6,7 +6,12 @@ import java.io.File;
 public enum TextFont {
   ARIAL (
       "Arial",
-      "",
+      "Arial.ttf",
+      ""),
+
+  FASCINATE_INLINE (
+      "Fascinate Inline",
+      "FascinateInline.ttf",
       ""),
 
   LONDRINA_SHADOW (
