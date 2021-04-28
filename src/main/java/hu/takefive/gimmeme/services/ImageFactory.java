@@ -12,21 +12,50 @@ import java.util.UUID;
 
 public class ImageFactory {
 
+  public static final int TEXT_ZOOM = 8;
+
   public static String writeTextToImage(String url, String templateName, String fontName, String text) {
     try {
 
       URL imageUrl = new URL(url);
       BufferedImage image = ImageIO.read(imageUrl);
-      Graphics2D g2dImage = image.createGraphics();
-
-      System.out.println("Hash: " + UUID.randomUUID());
 
       Image textImage = getTextImage(image, templateName, fontName, text);
 
+      Graphics2D g2dImage = image.createGraphics();
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      File outputFile = new File("src/main/resources/static/saved.png");
+      File outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".jpg");
+      ImageIO.write(image, "jpg", outputFile);
+    }
+    catch (Exception e) {
+      System.out.println(e.toString());
+    }
+
+    return "";
+  }
+
+  public static String writeTextToImage(
+      String url,
+      String templateName,
+      String fontName,
+      String textTop,
+      String textBottom) {
+    try {
+
+      URL imageUrl = new URL(url);
+      BufferedImage image = ImageIO.read(imageUrl);
+
+      Graphics2D g2dImage = image.createGraphics();
+      Image textImage = getTextImage(image, "text-top", fontName, textTop);
+      g2dImage.drawImage(textImage, 0,0, null);
+
+      textImage = getTextImage(image, "text-bottom", fontName, textBottom);
+      g2dImage.drawImage(textImage, 0,0, null);
+      g2dImage.dispose();
+
+      File outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
       ImageIO.write(image, "png", outputFile);
     }
     catch (Exception e) {
@@ -38,8 +67,8 @@ public class ImageFactory {
 
   private static Image getTextImage(BufferedImage image, String actionId, String fontName, String text) {
     BufferedImage textImage = new BufferedImage(
-        image.getWidth() * 8,
-        image.getHeight() * 8,
+        image.getWidth() * ImageFactory.TEXT_ZOOM,
+        image.getHeight() * ImageFactory.TEXT_ZOOM,
         BufferedImage.TYPE_INT_ARGB);
 
     TextTemplate textTemplate = TextTemplate.getTextTemplateByActionId(actionId);
@@ -49,15 +78,23 @@ public class ImageFactory {
 
     int maxTextWidth = (int) (textImage.getWidth() * textTemplate.getMaxWidth());
     int maxTextHeight = (int) (textImage.getHeight() * textTemplate.getMaxHeight());
-    float fontSize = calculateFontSize(g2dText, maxTextWidth, maxTextHeight, font, text);
+    float fontSize = getFontSize(g2dText, maxTextWidth, maxTextHeight, font, text);
     g2dText.setFont(font.deriveFont(font.getStyle(), fontSize));
 
-    g2dText.setPaint(Color.white);
-
     FontMetrics fm = g2dText.getFontMetrics();
-    int xPos = getXPosition(textImage.getWidth(), fm.stringWidth(text), textTemplate);
-    int yPos = getYPosition(textImage.getHeight(), fm.getHeight(), fm.getAscent(), textTemplate);
-    g2dText.drawString(text, xPos, yPos + fm.getAscent());
+    int stringWidth = fm.stringWidth(text);
+    int textPosX = getXPosition(textImage.getWidth(), stringWidth, textTemplate);
+    int textPosY = getYPosition(textImage.getHeight(), fm.getHeight(), fm.getAscent(), textTemplate);
+
+    int[] bgShape = getTextBackgroundShape(g2dText, fm, stringWidth, textPosX, textPosY);
+    boolean isBgDark = isImageDark(image, bgShape);
+
+    int textBgColor = isBgDark ? 0 : 255;
+    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 40));
+    g2dText.fillRect(bgShape[0], bgShape[1], bgShape[2], bgShape[3]);
+
+    g2dText.setColor(isBgDark ? Color.WHITE : Color.BLACK);
+    g2dText.drawString(text, textPosX, textPosY + fm.getAscent());
     g2dText.dispose();
 
     Image scaledTextImage = textImage.getScaledInstance(image.getWidth(), image.getHeight(), Image.SCALE_SMOOTH);
@@ -65,7 +102,19 @@ public class ImageFactory {
     return scaledTextImage;
   }
 
-  private static float calculateFontSize(Graphics2D g2dText, int maxTextWidth, int maxTextHeight, Font font, String text) {
+  private static int[] getTextBackgroundShape(
+      Graphics2D g2dText,
+      FontMetrics fm,
+      int stringWidth,
+      int textPosX,
+      int textPosY) {
+    int bgOffsetX = (int) (stringWidth * 0.05f);
+    int bgOffsetY = (int) ((fm.getHeight() - fm.getAscent()) / 2);
+
+    return new int[]{textPosX - bgOffsetX, textPosY + bgOffsetY, stringWidth + 2 * bgOffsetX, fm.getHeight()};
+  }
+
+  private static float getFontSize(Graphics2D g2dText, int maxTextWidth, int maxTextHeight, Font font, String text) {
     g2dText.setFont(font);
     FontMetrics fm = g2dText.getFontMetrics();
 
@@ -110,13 +159,14 @@ public class ImageFactory {
     return (int) (freeSpace / (top + bottom) * top);
   }
 
-  private boolean isDarkBackground(BufferedImage image) {
+  private static boolean isImageDark(BufferedImage image, int[] bgShape) {
 
     int pixelCounter = 0;
     float luminance = 0f;
-    for (int i = 0; i < image.getWidth(); i += 10) {
-      for (int j = 0; j < image.getHeight(); j += 10) {
-        int color = image.getRGB(i, j);
+
+    for (int x = (int) bgShape[0] / TEXT_ZOOM; x < (bgShape[0] + bgShape[2]) / TEXT_ZOOM; x += 10) {
+      for (int y = (int) bgShape[1] / TEXT_ZOOM; y < (bgShape[1] + bgShape[3]) / TEXT_ZOOM; y += 10) {
+        int color = image.getRGB(x, y);
         int red   = (color >>> 16) & 0xFF;
         int green = (color >>>  8) & 0xFF;
         int blue  = (color >>>  0) & 0xFF;
@@ -127,11 +177,7 @@ public class ImageFactory {
       }
     }
 
-    if (luminance / pixelCounter < 0.5f) {
-      return false;
-    }
-
-    return true;
+    return luminance / (float) pixelCounter < 0.5f;
   }
 
 }

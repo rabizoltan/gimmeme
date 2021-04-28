@@ -32,8 +32,8 @@ public class FontConfig {
     return matchingFontNamesCount > 0L;
   }
 
-  private boolean registerFont(TextFont font) throws IOException, FontFormatException {
-    if (font.getFontFile() == null || font.getFontFile().isBlank())
+  private boolean registerFont(TextFont font) throws IOException, FontFormatException, IllegalArgumentException {
+    if (font.getFontFile() == null || font.getFontFile().trim().equals(""))
       throw new IllegalArgumentException("Missing font filename in TextFont enum for font: " + font.getFontName());
 
     File fontFile = new File(TextFont.FONT_PATH + font.getFontFile());
