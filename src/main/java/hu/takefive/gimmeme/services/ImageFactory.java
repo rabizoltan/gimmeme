@@ -14,55 +14,36 @@ public class ImageFactory {
 
   public static final int TEXT_ZOOM = 8;
 
-  public static String writeTextToImage(String url, String templateName, String fontName, String text) {
-    try {
+  public static File writeTextToImage(String url, String templateName, String fontName, String text) {
+    File outputFile = null;
 
+    try {
       URL imageUrl = new URL(url);
       BufferedImage image = ImageIO.read(imageUrl);
+
+      Graphics2D g2dImage = image.createGraphics();
+      String[] textParts = text.split(" *\n *");
+
+      if (textParts.length > 1) {
+        text = text.replaceAll(textParts[0] + " *\n *", "");
+        templateName = "text-bottom";
+
+        Image textImage = getTextImage(image, "text-top", fontName, textParts[0]);
+        g2dImage.drawImage(textImage, 0,0, null);
+      }
 
       Image textImage = getTextImage(image, templateName, fontName, text);
-
-      Graphics2D g2dImage = image.createGraphics();
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      File outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".jpg");
-      ImageIO.write(image, "jpg", outputFile);
-    }
-    catch (Exception e) {
-      System.out.println(e.toString());
-    }
-
-    return "";
-  }
-
-  public static String writeTextToImage(
-      String url,
-      String templateName,
-      String fontName,
-      String textTop,
-      String textBottom) {
-    try {
-
-      URL imageUrl = new URL(url);
-      BufferedImage image = ImageIO.read(imageUrl);
-
-      Graphics2D g2dImage = image.createGraphics();
-      Image textImage = getTextImage(image, "text-top", fontName, textTop);
-      g2dImage.drawImage(textImage, 0,0, null);
-
-      textImage = getTextImage(image, "text-bottom", fontName, textBottom);
-      g2dImage.drawImage(textImage, 0,0, null);
-      g2dImage.dispose();
-
-      File outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
+      outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
       ImageIO.write(image, "png", outputFile);
     }
     catch (Exception e) {
       System.out.println(e.toString());
     }
 
-    return "";
+    return outputFile;
   }
 
   private static Image getTextImage(BufferedImage image, String actionId, String fontName, String text) {
@@ -90,7 +71,7 @@ public class ImageFactory {
     boolean isBgDark = isImageDark(image, bgShape);
 
     int textBgColor = isBgDark ? 0 : 255;
-    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 40));
+    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 64));
     g2dText.fillRect(bgShape[0], bgShape[1], bgShape[2], bgShape[3]);
 
     g2dText.setColor(isBgDark ? Color.WHITE : Color.BLACK);

@@ -15,8 +15,7 @@ public class ImageTestController {
         url,
         "text-middle",
         "Londrina Shadow",
-        "It's a very funny top text",
-        "And bottom text");
+        "It's a very funny top text\nAnd bottom text");
 
     return "Image saved";
   }
