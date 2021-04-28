@@ -39,6 +39,8 @@ public class SlackViewHandler {
       MessageShortcutPayload payload = req.getPayload();
       String teamId = payload.getTeam().getId();
       String channelId = payload.getChannel().getId();
+      //TODO fix to handle the rest of the files in the message
+      String fileType = payload.getMessage().getFiles().get(0).getFiletype();
 
       FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
           .token(System.getenv("SLACK_USER_TOKEN"))
@@ -51,13 +53,14 @@ public class SlackViewHandler {
       } else {
         uploadedFile = filesSharedPublicURLResponse.getFile();
       }
+      //TODO bug: cannot handle numbers and spaces in filename ???
       String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
 
       ViewsOpenResponse viewsOpenResponse = ctx.client()
           .viewsOpen(r -> r
               .token(System.getenv("SLACK_BOT_TOKEN"))
               .triggerId(payload.getTriggerId())
-              .view(buildSelectLayoutView(permaLinkPublic, channelId))
+              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
           );
 
       logger.info("viewsOpenResponse: {}", viewsOpenResponse);
@@ -115,6 +118,7 @@ public class SlackViewHandler {
         Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
               submissionData.get("imageUrl").toString(),
+              submissionData.get("fileType").toString(),
               submissionData.get("actionId").toString(),
               "Arial",
               text

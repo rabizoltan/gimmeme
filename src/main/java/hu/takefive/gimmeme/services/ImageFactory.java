@@ -14,7 +14,7 @@ public class ImageFactory {
 
   public static final int TEXT_ZOOM = 8;
 
-  public static File writeTextToImage(String url, String templateName, String fontName, String text) {
+  public static File writeTextToImage(String url, String fileType, String templateName, String fontName, String text) {
     File outputFile = null;
 
     try {
@@ -36,8 +36,8 @@ public class ImageFactory {
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
-      ImageIO.write(image, "png", outputFile);
+      outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + "." + fileType);
+      ImageIO.write(image, fileType, outputFile);
     }
     catch (Exception e) {
       System.out.println(e.toString());

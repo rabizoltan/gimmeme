@@ -19,12 +19,15 @@ public class SlackAppConfig {
 
     App app = new App();
 
+    app.command("/listfiles", slackFileHandler::listFiles);
+    app.command("/uploadfiles", slackFileHandler::uploadFiles);
+
     app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);
 
-    //TODO refactor: 1 action is enough, instead of actionId, view.block.value could be unique
     app.blockAction("text-top", slackViewHandler::handleInputTextView);
     app.blockAction("text-bottom", slackViewHandler::handleInputTextView);
     app.blockAction("text-middle", slackViewHandler::handleInputTextView);
+    app.blockAction("text-both", slackViewHandler::handleInputTextView);
 
     app.viewSubmission("generate-meme", slackViewHandler::handleViewSubmission);
 
