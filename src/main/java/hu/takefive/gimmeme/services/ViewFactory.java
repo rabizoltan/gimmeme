@@ -20,14 +20,14 @@ import static com.slack.api.model.view.Views.viewSubmit;
 //TODO finish all Views (nb: actionId <-> value)
 public class ViewFactory {
 
-  public static View buildSelectLayoutView(String imageUrl, String channelId) {
+  public static View buildSelectLayoutView(String imageUrl, String channelId, String fileType) {
     View view = new View();
     view.setType("modal");
     view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()));
     view.setCallbackId("select-layout");
 
-    String imageUrlJson = String.format("{ \"imageUrl\" : \"%s\", \"channelId\" : \"%s\" }", imageUrl, channelId);
-    view.setPrivateMetadata(imageUrlJson);
+    String privateMetadataUrlJson = String.format("{ \"imageUrl\" : \"%s\", \"channelId\" : \"%s\", \"fileType\" : \"%s\" }", imageUrl, channelId, fileType);
+    view.setPrivateMetadata(privateMetadataUrlJson);
 
     view.setBlocks(asBlocks(
         section(section -> section.text(markdownText("*Please choose a meme layout:*"))),

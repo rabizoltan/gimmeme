@@ -39,6 +39,7 @@ public class SlackViewHandler {
       MessageShortcutPayload payload = req.getPayload();
       String teamId = payload.getTeam().getId();
       String channelId = payload.getChannel().getId();
+      String fileType = payload.getMessage().getFiles().get(0).getFiletype();
 
       FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
           .token(System.getenv("SLACK_USER_TOKEN"))
@@ -57,7 +58,7 @@ public class SlackViewHandler {
           .viewsOpen(r -> r
               .token(System.getenv("SLACK_BOT_TOKEN"))
               .triggerId(payload.getTriggerId())
-              .view(buildSelectLayoutView(permaLinkPublic, channelId))
+              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
           );
 
       logger.info("viewsOpenResponse: {}", viewsOpenResponse);
@@ -112,9 +113,16 @@ public class SlackViewHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
 
+        System.out.println(submissionData.get("fileType").toString());
+
+
+
+
+
         Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
               submissionData.get("imageUrl").toString(),
+              submissionData.get("fileType").toString(),
               submissionData.get("actionId").toString(),
               "Arial",
               text
