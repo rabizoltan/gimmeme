@@ -2,6 +2,7 @@ package hu.takefive.gimmeme.config;
 
 import com.slack.api.bolt.App;
 import hu.takefive.gimmeme.handlers.SlackFileHandler;
+import hu.takefive.gimmeme.handlers.SlackMessageHandler;
 import hu.takefive.gimmeme.handlers.SlackViewHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ public class SlackAppConfig {
 
   SlackFileHandler slackFileHandler;
   SlackViewHandler slackViewHandler;
+  SlackMessageHandler slackMessageHandler;
 
   @Bean
   public App initSlackApp() {
@@ -21,7 +23,7 @@ public class SlackAppConfig {
 
     app.command("/listFiles", slackFileHandler::listFiles);
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
-    app.command("/greetings", slackFileHandler::greetings);
+    app.command("/greetings", slackMessageHandler::greetings);
 
     app.command("/rabi-gimmeme", slackViewHandler::buildView);
     app.blockAction("pickTemplate", slackViewHandler::updateView);

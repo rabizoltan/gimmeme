@@ -88,12 +88,4 @@ public class SlackFileHandler {
 
   }
 
-  public Response greetings(SlashCommandRequest req, Context ctx) {
-    System.out.println(req.getPayload().toString());
-    JsonObject jsonObject = new JsonObject();
-    jsonObject.addProperty("channelId", req.getPayload().getChannelId());
-    jsonObject.addProperty("text", ":wave: Greetings traveler!");
-    return ctx.ack(jsonObject);
-  };
-
 }
