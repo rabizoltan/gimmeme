@@ -66,7 +66,7 @@ public enum TextFont {
 
   public boolean hasPreview() {
     return fontPreview != null
-        && !fontPreview.isBlank()
+        && !fontPreview.trim().equals("")
         && new File(FONT_PREVIEW_PATH + fontPreview).isFile();
   }
 
