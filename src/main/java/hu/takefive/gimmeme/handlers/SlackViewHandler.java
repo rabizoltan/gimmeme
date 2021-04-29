@@ -117,6 +117,7 @@ public class SlackViewHandler {
               submissionData.get("imageUrl").toString(),
               submissionData.get("actionId").toString(),
               "Arial",
+              "big",
               text
           );
           slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());

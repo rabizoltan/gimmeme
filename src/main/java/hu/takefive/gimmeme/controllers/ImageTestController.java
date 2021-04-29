@@ -14,7 +14,8 @@ public class ImageTestController {
     ImageFactory.writeTextToImage(
         url,
         "text-middle",
-        "Londrina Shadow",
+        "Kranky",
+        "big",
         "It's a very funny top text\nAnd bottom text");
 
     return "Image saved";
