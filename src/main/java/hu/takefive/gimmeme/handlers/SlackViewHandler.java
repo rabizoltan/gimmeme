@@ -1,9 +1,11 @@
 package hu.takefive.gimmeme.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
 import com.slack.api.app_backend.interactive_components.payload.MessageShortcutPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
+import com.slack.api.bolt.request.builtin.GlobalShortcutRequest;
 import com.slack.api.bolt.request.builtin.MessageShortcutRequest;
 import com.slack.api.bolt.request.builtin.ViewSubmissionRequest;
 import com.slack.api.bolt.response.Response;
@@ -23,8 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
+import static hu.takefive.gimmeme.services.ViewFactory.helpView;
+import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 
 @Service
 @AllArgsConstructor
@@ -44,8 +47,8 @@ public class SlackViewHandler {
       String fileType = payload.getMessage().getFiles().get(0).getFiletype();
 
       FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
-          .token(System.getenv("SLACK_USER_TOKEN"))
-          .file(payload.getMessage().getFiles().get(0).getId())
+              .token(System.getenv("SLACK_USER_TOKEN"))
+              .file(payload.getMessage().getFiles().get(0).getId())
       );
       logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
 
@@ -162,5 +165,51 @@ public class SlackViewHandler {
 
       return ctx.ack();
     }
+
+  public Response handleHelpLayout(MessageShortcutRequest req, Context ctx) {
+    Logger logger = ctx.logger;
+
+    try {
+      MessageShortcutPayload payload = req.getPayload();
+
+      ViewsOpenResponse viewsOpenResponse = ctx.client()
+              .viewsOpen(r -> r
+                      .token(System.getenv("SLACK_BOT_TOKEN"))
+                      .triggerId(payload.getTriggerId())
+                      .view(helpView())
+              );
+
+      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
+
+    return ctx.ack();
+
+  }
+
+  public Response handleHelpLayout(GlobalShortcutRequest req, Context ctx) {
+    Logger logger = ctx.logger;
+
+    try {
+      GlobalShortcutPayload payload = req.getPayload();
+
+      ViewsOpenResponse viewsOpenResponse = ctx.client()
+              .viewsOpen(r -> r
+                      .token(System.getenv("SLACK_BOT_TOKEN"))
+                      .triggerId(payload.getTriggerId())
+                      .view(helpView())
+              );
+
+      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
+
+    return ctx.ack();
+
+  }
 
   }
