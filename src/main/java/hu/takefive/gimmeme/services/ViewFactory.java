@@ -40,7 +40,7 @@ public class ViewFactory {
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
         image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F0216NNVD0Q/pic-template-one.png?pub_secret=3496f63ca7")
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020A5PK60N/pic-template-two.png?pub_secret=6e18565c57")
             .altText("image-1")),
         actions(actions -> actions
             .elements(asElements(
@@ -51,12 +51,12 @@ public class ViewFactory {
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("2.png")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6"))
+                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020E0S5J93/2.png?pub_secret=e08ac164fe"))
             ))
         ),
         divider(),
         image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020A5PK60N/pic-template-two.png?pub_secret=6e18565c57")
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F0216NNVD0Q/pic-template-one.png?pub_secret=3496f63ca7")
             .altText("image-2")),
         actions(actions -> actions
             .elements(asElements(
