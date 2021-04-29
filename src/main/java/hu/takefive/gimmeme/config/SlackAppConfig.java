@@ -34,7 +34,7 @@ public class SlackAppConfig {
     app.blockAction("Fascinate Inline", slackViewHandler::handleSelectFontSizeView);
     app.blockAction("Kranky", slackViewHandler::handleSelectFontSizeView);
 
-    app.blockAction("fontSize", slackViewHandler::handleInputTextView);
+    app.blockAction("select-font-size", slackViewHandler::handleInputTextView);
 
     app.viewSubmission("generate-meme", slackViewHandler::handleViewSubmission);
 

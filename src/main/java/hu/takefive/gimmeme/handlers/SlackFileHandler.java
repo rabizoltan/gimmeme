@@ -21,7 +21,7 @@ public class SlackFileHandler {
 
   public Response uploadFile(Context ctx, File file, String channelId) {
     Logger logger = ctx.logger;
-    logger.error(channelId);
+
     try {
       FilesUploadResponse filesUploadResponse = ctx.client().filesUpload(r -> r
           .token(System.getenv("SLACK_BOT_TOKEN"))
@@ -87,7 +87,8 @@ public class SlackFileHandler {
 
   public static List<File> getStaticFileList() {
     List<File> result = new ArrayList<>();
-    File dir = new File("src/main/resources/static/images");
+    String appHome = System.getenv("APP_HOME");
+    File dir = new File(appHome + "src/main/resources/static/images");
     File[] directoryListing = dir.listFiles();
 
     if (directoryListing != null) {

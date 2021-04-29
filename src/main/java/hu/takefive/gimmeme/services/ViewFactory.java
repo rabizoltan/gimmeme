@@ -2,7 +2,6 @@ package hu.takefive.gimmeme.services;
 
 import com.slack.api.model.ModelConfigurator;
 import com.slack.api.model.block.ImageBlock;
-import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
@@ -89,17 +88,16 @@ public class ViewFactory {
   public static UpdateViewBuilder<String> buildSelectFontSizeView = (privateMetaData) -> View.builder()
       .type("modal")
       .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()))
-      .callbackId("select-font-size")
       .privateMetadata(privateMetaData)
       .blocks(asBlocks(
-          section(s -> s.text(markdownText("*Choose font size*"))
+          section(s -> s.text(markdownText("## Choose font size"))
               .accessory(staticSelect(select -> select
-                  .actionId("fontSize")
-                  .placeholder(plainText(pt -> pt.emoji(true).text("Choose font size")))
+                  .actionId("select-font-size")
+                  .placeholder(plainText(pt -> pt.emoji(true).text("Select font size")))
                   .options(asOptions(
-                      option(o -> o.text(plainText(pt -> pt.emoji(true).text("BIG"))).value("big")),
-                      option(o -> o.text(plainText(pt -> pt.emoji(true).text("Default"))).value("default")),
-                      option(o -> o.text(plainText(pt -> pt.emoji(true).text("small"))).value("small"))
+                      option(plainText("BIG"), "big"),
+                      option(plainText("Default"), "default"),
+                      option(plainText("small"), "small")
                       )
                   )
               ))
@@ -119,6 +117,14 @@ public class ViewFactory {
               .element(plainTextInput(pti -> pti.actionId("text-input").multiline(true)))
               .label(plainText(pt -> pt.text("Gimme text!").emoji(true)))
           )
+      ))
+      .build();
+
+  public static UpdateViewBuilder<String> buildAlertView = (errorMessage) -> View.builder()
+      .type("modal")
+      .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Alert!").build()))
+      .blocks(asBlocks(
+          section(s -> s.text(markdownText(errorMessage)))
       ))
       .build();
 }

@@ -2,6 +2,7 @@ package hu.takefive.gimmeme.services;
 
 import hu.takefive.gimmeme.models.TextFont;
 import hu.takefive.gimmeme.models.TextTemplate;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,18 +11,21 @@ import java.io.File;
 import java.net.URL;
 import java.util.UUID;
 
+@Slf4j
 public class ImageFactory {
 
   public static final int TEXT_ZOOM = 8;
+  public static final String APP_HOME = System.getenv("APP_HOME");
 
-  public static File writeTextToImage(String url, String fileType, String templateName, String fontName, String fontSize, String text) {
+  public static File writeTextToImage(
+      String url,
+      String fileType,
+      String templateName,
+      String fontName,
+      String fontSize,
+      String text) {
+
     File outputFile = null;
-    System.out.println("url: " + url);
-    System.out.println("fileType: " + fileType);
-    System.out.println("templateName: " + templateName);
-    System.out.println("fontName: " + fontName);
-    System.out.println("fontSize: " + fontSize);
-    System.out.println("text: " + text);
 
     try {
       URL imageUrl = new URL(url);
@@ -42,14 +46,13 @@ public class ImageFactory {
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      outputFile = new File("src/main/resources/static/images/gallery/" + UUID.randomUUID() + "." + fileType);
+      outputFile = new File(APP_HOME + "src/main/resources/static/images/gallery/" + UUID.randomUUID() + "." + fileType);
       ImageIO.write(image, fileType, outputFile);
     }
     catch (Exception e) {
-      System.out.println(e.toString());
+      log.error(String.valueOf(e));
     }
 
-    System.out.println("filename: " + outputFile.getName());
     return outputFile;
   }
 
