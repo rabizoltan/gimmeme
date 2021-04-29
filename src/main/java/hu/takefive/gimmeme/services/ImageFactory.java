@@ -46,7 +46,8 @@ public class ImageFactory {
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      outputFile = new File(APP_HOME + "src/main/resources/static/images/gallery/" + UUID.randomUUID() + "." + fileType);
+      String appHome = System.getenv("APP_HOME");
+      outputFile = new File(appHome + "src/main/resources/static/images/gallery/" + UUID.randomUUID() + "." + fileType);
       ImageIO.write(image, fileType, outputFile);
     }
     catch (Exception e) {
