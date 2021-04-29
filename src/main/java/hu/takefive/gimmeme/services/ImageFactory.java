@@ -14,7 +14,7 @@ public class ImageFactory {
 
   public static final int TEXT_ZOOM = 8;
 
-  public static File writeTextToImage(String url, String templateName, String fontName, String fontSize, String text) {
+  public static File writeTextToImage(String url, String fileType, String templateName, String fontName, String fontSize, String text) {
     File outputFile = null;
 
     try {
@@ -28,16 +28,16 @@ public class ImageFactory {
         text = text.replaceAll(textParts[0] + " *\n *", "");
         templateName = "text-bottom";
 
-        Image textImage = getTextImage(image, "text-top", fontName, "small", textParts[0]);
+        Image textImage = getTextImage(image, "text-top", fontName, fontSize, textParts[0]);
         g2dImage.drawImage(textImage, 0,0, null);
       }
 
-      Image textImage = getTextImage(image, templateName, fontName, "big", text);
+      Image textImage = getTextImage(image, templateName, fontName, fontSize, text);
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
-      ImageIO.write(image, "png", outputFile);
+      outputFile = new File("src/main/resources/static/images/gallery/" + UUID.randomUUID() + "." + fileType);
+      ImageIO.write(image, fileType, outputFile);
     }
     catch (Exception e) {
       System.out.println(e.toString());
