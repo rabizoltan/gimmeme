@@ -36,7 +36,7 @@ public class ImageFactory {
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
-      outputFile = new File("src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
+      outputFile = new File("usr/app/src/main/resources/static/images/temp/" + UUID.randomUUID() + ".png");
       ImageIO.write(image, "png", outputFile);
     }
     catch (Exception e) {

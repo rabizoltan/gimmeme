@@ -17,5 +17,4 @@ VOLUME /tmp
 COPY src /usr/app/src
 COPY --from=build /usr/app/build/libs/*.jar app.jar
 EXPOSE 3000
-
 ENTRYPOINT ["java", "-jar", "/app.jar"]
