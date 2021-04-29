@@ -12,9 +12,8 @@ COPY src src
 
 RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest
 
-FROM openjdk:11.0-jre-slim-buster
+FROM openjdk:11.0
 VOLUME /tmp
 COPY --from=build /usr/app/build/libs/*.jar app.jar
-RUN apt-get install libfreetype6
 
 ENTRYPOINT ["java", "-jar", "/app.jar"]
