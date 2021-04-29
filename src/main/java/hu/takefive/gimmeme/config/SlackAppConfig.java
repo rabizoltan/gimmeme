@@ -33,10 +33,12 @@ public class SlackAppConfig {
     app.blockAction("text-middle", slackViewHandler::handleSelectFontView);
     app.blockAction("text-both", slackViewHandler::handleSelectFontView);
 
-    app.blockAction("Trade Winds", slackViewHandler::handleInputTextView);
-    app.blockAction("Londrina Shadow", slackViewHandler::handleInputTextView);
-    app.blockAction("Fascinate Inline", slackViewHandler::handleInputTextView);
-    app.blockAction("Kranky", slackViewHandler::handleInputTextView);
+    app.blockAction("Trade Winds", slackViewHandler::handleSelectFontSizeView);
+    app.blockAction("Londrina Shadow", slackViewHandler::handleSelectFontSizeView);
+    app.blockAction("Fascinate Inline", slackViewHandler::handleSelectFontSizeView);
+    app.blockAction("Kranky", slackViewHandler::handleSelectFontSizeView);
+
+    app.blockAction("select-font-size", slackViewHandler::handleInputTextView);
 
     app.blockAction("command-selection-action", slackMessageHandler::commandHelp);
 

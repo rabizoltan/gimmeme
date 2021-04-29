@@ -36,7 +36,8 @@ public class FontConfig {
     if (font.getFontFile() == null || font.getFontFile().trim().equals(""))
       throw new IllegalArgumentException("Missing font filename in TextFont enum for font: " + font.getFontName());
 
-    File fontFile = new File(TextFont.FONT_PATH + font.getFontFile());
+    String appHome = System.getenv("APP_HOME");
+    File fontFile = new File(appHome + TextFont.FONT_PATH + font.getFontFile());
     if (!fontFile.isFile())
       throw new IllegalArgumentException("Missing font file: " + TextFont.FONT_PATH + font.getFontFile());
 

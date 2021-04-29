@@ -1,10 +1,15 @@
 package hu.takefive.gimmeme.services;
 
+import com.slack.api.model.ModelConfigurator;
+import com.slack.api.model.block.ImageBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
 import hu.takefive.gimmeme.models.HelpText;
 
+import static com.slack.api.model.block.Blocks.*;
+import static com.slack.api.model.block.composition.BlockCompositions.*;
+import static com.slack.api.model.block.element.BlockElements.*;
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.Blocks.asBlocks;
 import static com.slack.api.model.block.Blocks.divider;
@@ -34,7 +39,7 @@ public class ViewFactory {
 
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
-        image(imageElementBuilder -> imageElementBuilder
+        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
             .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c").altText("layout-1")),
         actions(actions -> actions
             .elements(asElements(
@@ -43,7 +48,7 @@ public class ViewFactory {
             ))
         ),
         divider(),
-        image(imageElementBuilder -> imageElementBuilder
+        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
             .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6").altText("layout-2")),
         actions(actions -> actions
             .elements(asElements(
@@ -56,55 +61,89 @@ public class ViewFactory {
     return view;
   }
 
-  public static View buildSelectFontView(String privateMetadata) {
-    View view = new View();
-    view.setType("modal");
-    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()));
-    view.setCallbackId("select-font");
-    view.setPrivateMetadata(privateMetadata);
+  public static UpdateViewBuilder<String> buildSelectFontView = (privateMetaData) -> View.builder()
+      .type("modal")
+      .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()))
+      .callbackId("select-font")
+      .privateMetadata(privateMetaData)
+      .blocks(asBlocks(
+          //TODO implement logic to upload layout-templates (no hardcoding here!)
+          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605").altText("font-1")),
+          actions(actions -> actions
+              .elements(asElements(
+                  button(b -> b.text(plainText(pt -> pt.emoji(true)
+                      .text("Gimme this font!")))
+                      .actionId("Trade Winds")
+                      .value("Trade Winds")),
+                  button(b -> b.text(plainText(pt -> pt.emoji(true)
+                      .text("Gimme this font!")))
+                      .actionId("Londrina Shadow")
+                      .value("Londrina Shadow"))
+              ))
+          ),
+          divider(),
+          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325").altText("font-2")),
+          actions(actions -> actions
+              .elements(asElements(
+                  button(b -> b.text(plainText(pt -> pt.emoji(true)
+                      .text("Gimme this font!")))
+                      .actionId("Fascinate Inline")
+                      .value("Fascinate Inline")),
+                  button(b -> b.text(plainText(pt -> pt.emoji(true)
+                      .text("Gimme this font!")))
+                      .actionId("Kranky")
+                      .value("Kranky"))
+              ))
+          )
+      ))
+      .build();
 
-    view.setBlocks(asBlocks(
-        //TODO implement logic to upload layout-templates (no hardcoding here!)
-        image(imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605").altText("font-1")),
-        actions(actions -> actions
-            .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this font!"))).actionId("Trade Winds").value("Trade Winds")),
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this font!"))).actionId("Londrina Shadow").value("Londrina Shadow"))
-            ))
-        ),
-        divider(),
-        image(imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325").altText("font-2")),
-        actions(actions -> actions
-            .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this font!"))).actionId("Fascinate Inline").value("Fascinate Inline")),
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this font!"))).actionId("Kranky").value("Kranky"))
-            ))
-        )
-    ));
+  public static UpdateViewBuilder<String> buildSelectFontSizeView = (privateMetaData) -> View.builder()
+      .type("modal")
+      .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()))
+      .privateMetadata(privateMetaData)
+      .blocks(asBlocks(
+          section(s -> s.text(markdownText("## Choose font size"))
+              .accessory(staticSelect(select -> select
+                  .actionId("select-font-size")
+                  .placeholder(plainText(pt -> pt.emoji(true).text("Select font size")))
+                  .options(asOptions(
+                      option(plainText("BIG"), "big"),
+                      option(plainText("Default"), "default"),
+                      option(plainText("small"), "small")
+                      )
+                  )
+              ))
+          )
+      ))
+      .build();
 
-    return view;
-  }
+  public static UpdateViewBuilder<String> buildInputTextView = (privateMetaData) -> View.builder()
+      .type("modal")
+      .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()))
+      .callbackId("generate-meme")
+      .submit(viewSubmit(submit -> submit.type("plain_text").text("Gimmeme!").emoji(true)))
+      .privateMetadata(privateMetaData)
+      .blocks(asBlocks(
+          input(input -> input
+              .blockId("text-block")
+              .element(plainTextInput(pti -> pti.actionId("text-input").multiline(true)))
+              .label(plainText(pt -> pt.text("Gimme text!").emoji(true)))
+          )
+      ))
+      .build();
 
-  public static View buildInputTextView(String privateMetadata) {
-    View view = new View();
-    view.setType("modal");
-    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()));
-    view.setCallbackId("generate-meme");
-    view.setSubmit(viewSubmit(submit -> submit.type("plain_text").text("Gimmeme!").emoji(true)));
-    view.setPrivateMetadata(privateMetadata);
+  public static UpdateViewBuilder<String> buildAlertView = (errorMessage) -> View.builder()
+      .type("modal")
+      .title((ViewTitle.builder().type(PlainTextObject.TYPE).text("Alert!").build()))
+      .blocks(asBlocks(
+          section(s -> s.text(markdownText(errorMessage)))
+      ))
+      .build();
 
-    view.setBlocks(asBlocks(
-        input(input -> input
-            .blockId("text-block")
-            .element(plainTextInput(pti -> pti.actionId("text-input").multiline(true)))
-            .label(plainText(pt -> pt.text("Gimme text!").emoji(true)))
-        )
-    ));
 
-    return view;
-  }
 
   public static View helpView() {
     View view = new View();
@@ -113,21 +152,21 @@ public class ViewFactory {
     view.setCallbackId("select-layout");
 
     view.setBlocks(asBlocks(
-            divider(),
-            section(section -> section.text(markdownText("These are the available commands in the GimMeme app:"))),
-            section(section -> section.text(plainText("/gimmehelp"))),
-            section(section -> section.text(plainText("/gimmeme"))),
-            section(section -> section.text(plainText("/mittomeme"))),
-            divider(),
-            section(section -> section.text(markdownText("Select a command for more information"))
-                    .accessory(staticSelect(staticSelect -> staticSelect
-                            .actionId("command-selection-action")
-                            .placeholder(plainText("Select..."))
-                            .options(asOptions(
-                                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
-                                    option(plainText("/Gimmeme"), "GIMMEME")
-                            ))
-                    )))
+        divider(),
+        section(section -> section.text(markdownText("These are the available commands in the GimMeme app:"))),
+        section(section -> section.text(plainText("/gimmehelp"))),
+        section(section -> section.text(plainText("/gimmeme"))),
+        section(section -> section.text(plainText("/mittomeme"))),
+        divider(),
+        section(section -> section.text(markdownText("Select a command for more information"))
+            .accessory(staticSelect(staticSelect -> staticSelect
+                .actionId("command-selection-action")
+                .placeholder(plainText("Select..."))
+                .options(asOptions(
+                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
+                    option(plainText("/Gimmeme"), "GIMMEME")
+                ))
+            )))
     ));
 
     return view;
@@ -142,21 +181,20 @@ public class ViewFactory {
     String helpText = HelpText.valueOf(commandName).commandHelp;
 
     view.setBlocks(asBlocks(
-            divider(),
-            section(section -> section.text(markdownText(helpText))),
-            divider(),
-            section(section -> section.text(markdownText("Select a command for more information"))
-                    .accessory(staticSelect(staticSelect -> staticSelect
-                            .actionId("command-selection-action")
-                            .placeholder(plainText("Select..."))
-                            .options(asOptions(
-                                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
-                                    option(plainText("/Gimmeme"), "GIMMEME")
-                            ))
-                    )))
+        divider(),
+        section(section -> section.text(markdownText(helpText))),
+        divider(),
+        section(section -> section.text(markdownText("Select a command for more information"))
+            .accessory(staticSelect(staticSelect -> staticSelect
+                .actionId("command-selection-action")
+                .placeholder(plainText("Select..."))
+                .options(asOptions(
+                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
+                    option(plainText("/Gimmeme"), "GIMMEME")
+                ))
+            )))
     ));
 
     return view;
   }
-
 }

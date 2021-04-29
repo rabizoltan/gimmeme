@@ -1,7 +1,9 @@
 package hu.takefive.gimmeme.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
+import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.interactive_components.payload.MessageShortcutPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
@@ -14,17 +16,18 @@ import com.slack.api.methods.response.files.FilesSharedPublicURLResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.methods.response.views.ViewsUpdateResponse;
 import com.slack.api.model.File;
-import com.slack.api.model.view.ViewState;
 import hu.takefive.gimmeme.services.ImageFactory;
+import hu.takefive.gimmeme.services.UpdateViewBuilder;
+import hu.takefive.gimmeme.services.ViewFactory;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
+import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
@@ -37,103 +40,130 @@ public class SlackViewHandler {
 
   public Response handleSelectLayoutView(MessageShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
-    File uploadedFile;
-
-    try {
+    Thread viewCreateThread = new Thread(() -> {
+      File uploadedFile;
       MessageShortcutPayload payload = req.getPayload();
-      String teamId = payload.getTeam().getId();
-      String channelId = payload.getChannel().getId();
-      //TODO fix to handle the rest of the files in the message
-      String fileType = payload.getMessage().getFiles().get(0).getFiletype();
 
-      FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
-              .token(System.getenv("SLACK_USER_TOKEN"))
-              .file(payload.getMessage().getFiles().get(0).getId())
-      );
-      logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
+      try {
+        String teamId = payload.getTeam().getId();
+        String channelId = payload.getChannel().getId();
 
-      if (!filesSharedPublicURLResponse.isOk()) {
-        uploadedFile = payload.getMessage().getFiles().get(0);
-      } else {
-        uploadedFile = filesSharedPublicURLResponse.getFile();
+        //TODO fix to handle the rest of the files in the message
+        if (payload.getMessage().getFiles() == null) {
+          throw new IllegalArgumentException("Please select a picture!");
+        }
+
+        String fileType = payload.getMessage().getFiles().get(0).getFiletype();
+
+        FilesSharedPublicURLResponse filesSharedPublicURLResponse = ctx.client().filesSharedPublicURL(r -> r
+            .token(System.getenv("SLACK_USER_TOKEN"))
+            .file(payload.getMessage().getFiles().get(0).getId())
+        );
+        logger.info("filesSharedPublicURLResponse: {}", filesSharedPublicURLResponse);
+
+        if (!filesSharedPublicURLResponse.isOk()) {
+          uploadedFile = payload.getMessage().getFiles().get(0);
+        } else {
+          uploadedFile = filesSharedPublicURLResponse.getFile();
+        }
+        //TODO bug: cannot handle numbers and spaces in filename ???
+        String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
+
+        ViewsOpenResponse viewsOpenResponse = ctx.client()
+            .viewsOpen(r -> r
+                .token(System.getenv("SLACK_BOT_TOKEN"))
+                .triggerId(payload.getTriggerId())
+                .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
+            );
+
+        logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+
+      } catch (IllegalArgumentException e) {
+        sendErrorView(ctx, payload.getTriggerId(), e.getMessage(), ViewFactory.buildAlertView);
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
       }
-      //TODO bug: cannot handle numbers and spaces in filename ???
-      String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
-
-      ViewsOpenResponse viewsOpenResponse = ctx.client()
-          .viewsOpen(r -> r
-              .token(System.getenv("SLACK_BOT_TOKEN"))
-              .triggerId(payload.getTriggerId())
-              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
-          );
-
-      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
-
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+    });
+    viewCreateThread.start();
 
     return ctx.ack();
   }
 
   public Response handleSelectFontView(BlockActionRequest req, Context ctx) {
+
+    return updateView(req, ctx, "actionId", ViewFactory.buildSelectFontView);
+  }
+
+  public Response handleSelectFontSizeView(BlockActionRequest req, Context ctx) {
+
+    return updateView(req, ctx, "fontName", ViewFactory.buildSelectFontSizeView);
+  }
+
+  public Response handleInputTextView(BlockActionRequest req, Context ctx) {
+
+    return updateView(req, ctx, "fontSize", ViewFactory.buildInputTextView);
+  }
+
+  private Response updateView(BlockActionRequest req, Context ctx, String actionId, UpdateViewBuilder<String> viewBuilder) {
     Logger logger = ctx.logger;
 
-    try {
-      String actionId = req.getPayload().getActions().get(0).getActionId();
-      String privateMetadataString = req.getPayload().getView().getPrivateMetadata();
+    Thread viewUpdateThread = new Thread(() -> {
+      try {
+        String privateMetadataJson = getUpdatedPrivateMetadata(req, actionId);
 
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadataString, HashMap.class);
-      privateMetadataMap.put("actionId", actionId);
-      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
+        ViewsUpdateResponse viewsUpdateResponse = ctx.client()
+            .viewsUpdate(r -> r
+                .viewId(req.getPayload().getView().getId())
+                .view(viewBuilder.buildUpdateView(privateMetadataJson))
+            );
+        logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
-      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
-              .viewsUpdate(r -> r
-                  .viewId(req.getPayload().getView().getId())
-                  .view(buildSelectFontView(privateMetadataJson))
-              );
-      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
-
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+    });
+    viewUpdateThread.start();
 
     return ctx.ack();
   }
 
-  public Response handleInputTextView(BlockActionRequest req, Context ctx) {
+  private Response sendErrorView(Context ctx, String triggerId, String errorMessage, UpdateViewBuilder<String> viewBuilder) {
     Logger logger = ctx.logger;
 
-    try {
-      String privateMetadata = req.getPayload().getView().getPrivateMetadata();
-      String fontName = req.getPayload().getActions().get(0).getActionId();
+      try {
+        ViewsOpenResponse viewsOpenResponse = ctx.client()
+            .viewsOpen(r -> r
+                .token(System.getenv("SLACK_BOT_TOKEN"))
+                .triggerId(triggerId)
+                .view(viewBuilder.buildUpdateView(errorMessage))
+            );
+        logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadata, HashMap.class);
-      privateMetadataMap.put("fontName", fontName);
-      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
-
-      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
-          .viewsUpdate(r -> r
-              .viewId(req.getPayload().getView().getId())
-              .view(buildInputTextView(privateMetadataJson))
-          );
-      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
-
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
 
     return ctx.ack();
+  }
+
+  private String getUpdatedPrivateMetadata(BlockActionRequest req, String key)
+      throws JsonProcessingException {
+    String privateMetadata = req.getPayload().getView().getPrivateMetadata();
+    BlockActionPayload.Action action = req.getPayload().getActions().get(0);
+
+    String actionId = "static_select".equals(action.getType())
+        ? action.getSelectedOption().getValue()
+        : action.getActionId();
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
+    privateMetadataMap.put(key, actionId);
+
+    return objectMapper.writeValueAsString(privateMetadataMap);
   }
 
   public Response handleViewSubmission(ViewSubmissionRequest req, Context ctx) {
     Logger logger = ctx.logger;
-
-    String privateMetadata = req.getPayload().getView().getPrivateMetadata();
-    Map<String, Map<String, ViewState.Value>> stateValues = req.getPayload().getView().getState().getValues();
-    String text = stateValues.get("text-block").get("text-input").getValue();
 
     //TODO figure this out
 //    Map<String, String> errors = new HashMap<>();
@@ -142,8 +172,11 @@ public class SlackViewHandler {
 //    } else {
 
       try {
+        String privateMetadata = req.getPayload().getView().getPrivateMetadata();
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
+        Map submissionData = objectMapper.readValue(privateMetadata, Map.class);
+
+        String text = req.getPayload().getView().getState().getValues().get("text-block").get("text-input").getValue();
 
         //TODO: get font size from view
         Thread memGenThread = new Thread(() -> {
