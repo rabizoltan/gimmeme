@@ -30,8 +30,8 @@ public enum TextFont {
       ""
   );
 
-  public static final String FONT_PATH = "./src/main/resources/static/fonts/";
-  public static final String FONT_PREVIEW_PATH = "./src/main/resources/static/fonts/preview/";
+  public static final String FONT_PATH = "src/main/resources/static/fonts/";
+  public static final String FONT_PREVIEW_PATH = "src/main/resources/static/fonts/preview/";
 
   private String fontName;
   private String fontFile;

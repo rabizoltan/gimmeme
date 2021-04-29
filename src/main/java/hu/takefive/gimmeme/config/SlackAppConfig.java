@@ -23,6 +23,8 @@ public class SlackAppConfig {
 
     app.command("/listfiles", slackFileHandler::listFiles);
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
+    app.command("/greetings", slackMessageHandler::greetings);
+    app.command("/gimmehelp", slackMessageHandler::basicHelp);
     app.command("/gimmeme", slackViewHandler::handleSelectImageView);
 
     app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);

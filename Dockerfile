@@ -10,7 +10,7 @@ RUN sh ./gradlew build -x bootJar -x test --continue
 
 COPY src src
 
-RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest
+RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest -x test
 
 FROM openjdk:11.0
 VOLUME /tmp
