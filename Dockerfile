@@ -12,8 +12,7 @@ COPY src src
 
 RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest
 
-FROM openjdk:11.0-jre-slim-buster
-
+FROM openjdk:11.0
 VOLUME /tmp
 
 ENV APP_HOME=/usr/app/

@@ -5,10 +5,25 @@ import com.slack.api.model.block.ImageBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
+import hu.takefive.gimmeme.models.HelpText;
 
 import static com.slack.api.model.block.Blocks.*;
 import static com.slack.api.model.block.composition.BlockCompositions.*;
 import static com.slack.api.model.block.element.BlockElements.*;
+import static com.slack.api.model.block.Blocks.actions;
+import static com.slack.api.model.block.Blocks.asBlocks;
+import static com.slack.api.model.block.Blocks.divider;
+import static com.slack.api.model.block.Blocks.image;
+import static com.slack.api.model.block.Blocks.input;
+import static com.slack.api.model.block.Blocks.section;
+import static com.slack.api.model.block.composition.BlockCompositions.asOptions;
+import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
+import static com.slack.api.model.block.composition.BlockCompositions.option;
+import static com.slack.api.model.block.composition.BlockCompositions.plainText;
+import static com.slack.api.model.block.element.BlockElements.asElements;
+import static com.slack.api.model.block.element.BlockElements.button;
+import static com.slack.api.model.block.element.BlockElements.plainTextInput;
+import static com.slack.api.model.block.element.BlockElements.staticSelect;
 import static com.slack.api.model.view.Views.viewSubmit;
 
 public class ViewFactory {
@@ -127,4 +142,59 @@ public class ViewFactory {
           section(s -> s.text(markdownText(errorMessage)))
       ))
       .build();
+
+
+
+  public static View helpView() {
+    View view = new View();
+    view.setType("modal");
+    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmehelp!").build()));
+    view.setCallbackId("select-layout");
+
+    view.setBlocks(asBlocks(
+        divider(),
+        section(section -> section.text(markdownText("These are the available commands in the GimMeme app:"))),
+        section(section -> section.text(plainText("/gimmehelp"))),
+        section(section -> section.text(plainText("/gimmeme"))),
+        section(section -> section.text(plainText("/mittomeme"))),
+        divider(),
+        section(section -> section.text(markdownText("Select a command for more information"))
+            .accessory(staticSelect(staticSelect -> staticSelect
+                .actionId("command-selection-action")
+                .placeholder(plainText("Select..."))
+                .options(asOptions(
+                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
+                    option(plainText("/Gimmeme"), "GIMMEME")
+                ))
+            )))
+    ));
+
+    return view;
+  }
+
+  public static View commandHelpView(String commandName) {
+    View view = new View();
+    view.setType("modal");
+    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmehelp!").build()));
+    view.setCallbackId("select-layout");
+
+    String helpText = HelpText.valueOf(commandName).commandHelp;
+
+    view.setBlocks(asBlocks(
+        divider(),
+        section(section -> section.text(markdownText(helpText))),
+        divider(),
+        section(section -> section.text(markdownText("Select a command for more information"))
+            .accessory(staticSelect(staticSelect -> staticSelect
+                .actionId("command-selection-action")
+                .placeholder(plainText("Select..."))
+                .options(asOptions(
+                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
+                    option(plainText("/Gimmeme"), "GIMMEME")
+                ))
+            )))
+    ));
+
+    return view;
+  }
 }

@@ -2,6 +2,7 @@ package hu.takefive.gimmeme.config;
 
 import com.slack.api.bolt.App;
 import hu.takefive.gimmeme.handlers.SlackFileHandler;
+import hu.takefive.gimmeme.handlers.SlackMessageHandler;
 import hu.takefive.gimmeme.handlers.SlackViewHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ public class SlackAppConfig {
 
   SlackFileHandler slackFileHandler;
   SlackViewHandler slackViewHandler;
+  SlackMessageHandler slackMessageHandler;
 
   @Bean
   public App initSlackApp() {
@@ -23,6 +25,8 @@ public class SlackAppConfig {
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
 
     app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);
+    app.messageShortcut("Gimmehelp!", slackViewHandler::handleHelpLayout);
+    app.globalShortcut("Gimmehelp!", slackViewHandler::handleHelpLayout);
 
     app.blockAction("text-top", slackViewHandler::handleSelectFontView);
     app.blockAction("text-bottom", slackViewHandler::handleSelectFontView);
@@ -35,6 +39,8 @@ public class SlackAppConfig {
     app.blockAction("Kranky", slackViewHandler::handleSelectFontSizeView);
 
     app.blockAction("select-font-size", slackViewHandler::handleInputTextView);
+
+    app.blockAction("command-selection-action", slackMessageHandler::commandHelp);
 
     app.viewSubmission("generate-meme", slackViewHandler::handleViewSubmission);
 
