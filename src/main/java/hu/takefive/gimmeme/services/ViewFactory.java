@@ -28,32 +28,94 @@ import static com.slack.api.model.view.Views.viewSubmit;
 
 public class ViewFactory {
 
+  public static View buildSelectImageView(String channelId, String teamId) {
+    View view = new View();
+    view.setType("modal");
+    view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()));
+    view.setCallbackId("select-image");
+
+    String privateMetadataUrlJson = String.format("{ \"channelId\" : \"%s\", \"teamId\" : \"%s\" }", channelId, teamId);
+    view.setPrivateMetadata(privateMetadataUrlJson);
+
+    view.setBlocks(asBlocks(
+        //TODO implement logic to upload layout-templates (no hardcoding here!)
+        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F0216NNVD0Q/pic-template-one.png?pub_secret=3496f63ca7")
+            .altText("image-1")),
+        actions(actions -> actions
+            .elements(asElements(
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this template!")))
+                    .actionId("1.jpg")
+                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020UGQ5GC9/1.jpg?pub_secret=fa98aec0d0")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this template!")))
+                    .actionId("2.png")
+                    .value("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6"))
+            ))
+        ),
+        divider(),
+        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020A5PK60N/pic-template-two.png?pub_secret=6e18565c57")
+            .altText("image-2")),
+        actions(actions -> actions
+            .elements(asElements(
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this template!")))
+                    .actionId("3.jpg")
+                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020H69DKU3/3.jpg?pub_secret=9a939c6a9b")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this template!")))
+                    .actionId("4.jpg")
+                    .value("https://slack-files.com/files-pri/T0202GRF98C-F0216PSEPA4/4.jpg?pub_secret=125b2735e0"))
+            ))
+        )
+    ));
+
+    return view;
+  }
+
   public static View buildSelectLayoutView(String imageUrl, String channelId, String fileType) {
     View view = new View();
     view.setType("modal");
     view.setTitle((ViewTitle.builder().type(PlainTextObject.TYPE).text("Gimmeme!").build()));
     view.setCallbackId("select-layout");
 
-    String privateMetadataUrlJson = String.format("{ \"imageUrl\" : \"%s\", \"channelId\" : \"%s\", \"fileType\" : \"%s\" }", imageUrl, channelId, fileType);
+    String privateMetadataUrlJson = String
+        .format("{ \"imageUrl\" : \"%s\", \"channelId\" : \"%s\", \"fileType\" : \"%s\" }", imageUrl, channelId, fileType);
     view.setPrivateMetadata(privateMetadataUrlJson);
 
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
         image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c").altText("layout-1")),
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c")
+            .altText("layout-1")),
         actions(actions -> actions
             .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this layout!"))).actionId("text-top").value("text-top")),
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this layout!"))).actionId("text-middle").value("text-middle"))
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this layout!")))
+                    .actionId("text-top")
+                    .value("text-top")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this layout!")))
+                    .actionId("text-middle")
+                    .value("text-middle"))
             ))
         ),
         divider(),
         image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6").altText("layout-2")),
+            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6")
+            .altText("layout-2")),
         actions(actions -> actions
             .elements(asElements(
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this layout!"))).actionId("text-both").value("text-both")),
-                button(b -> b.text(plainText(pt -> pt.emoji(true).text("Gimme this layout!"))).actionId("text-bottom").value("text-bottom"))
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this layout!")))
+                    .actionId("text-both")
+                    .value("text-both")),
+                button(b -> b.text(plainText(pt -> pt.emoji(true)
+                    .text("Gimme this layout!")))
+                    .actionId("text-bottom")
+                    .value("text-bottom"))
             ))
         )
     ));
@@ -69,7 +131,8 @@ public class ViewFactory {
       .blocks(asBlocks(
           //TODO implement logic to upload layout-templates (no hardcoding here!)
           image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605").altText("font-1")),
+              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605")
+              .altText("font-1")),
           actions(actions -> actions
               .elements(asElements(
                   button(b -> b.text(plainText(pt -> pt.emoji(true)
@@ -84,7 +147,8 @@ public class ViewFactory {
           ),
           divider(),
           image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325").altText("font-2")),
+              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325")
+              .altText("font-2")),
           actions(actions -> actions
               .elements(asElements(
                   button(b -> b.text(plainText(pt -> pt.emoji(true)
