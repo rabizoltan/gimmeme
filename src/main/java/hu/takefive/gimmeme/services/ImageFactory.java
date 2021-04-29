@@ -16,6 +16,12 @@ public class ImageFactory {
 
   public static File writeTextToImage(String url, String fileType, String templateName, String fontName, String fontSize, String text) {
     File outputFile = null;
+    System.out.println("url: " + url);
+    System.out.println("fileType: " + fileType);
+    System.out.println("templateName: " + templateName);
+    System.out.println("fontName: " + fontName);
+    System.out.println("fontSize: " + fontSize);
+    System.out.println("text: " + text);
 
     try {
       URL imageUrl = new URL(url);
@@ -43,6 +49,7 @@ public class ImageFactory {
       System.out.println(e.toString());
     }
 
+    System.out.println("filename: " + outputFile.getName());
     return outputFile;
   }
 

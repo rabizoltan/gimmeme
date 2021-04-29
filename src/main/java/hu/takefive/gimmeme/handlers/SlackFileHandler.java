@@ -21,7 +21,7 @@ public class SlackFileHandler {
 
   public Response uploadFile(Context ctx, File file, String channelId) {
     Logger logger = ctx.logger;
-
+    logger.error(channelId);
     try {
       FilesUploadResponse filesUploadResponse = ctx.client().filesUpload(r -> r
           .token(System.getenv("SLACK_BOT_TOKEN"))

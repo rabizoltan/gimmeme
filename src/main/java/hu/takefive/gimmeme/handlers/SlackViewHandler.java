@@ -1,6 +1,8 @@
 package hu.takefive.gimmeme.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.interactive_components.payload.MessageShortcutPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
@@ -12,18 +14,16 @@ import com.slack.api.methods.response.files.FilesSharedPublicURLResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.methods.response.views.ViewsUpdateResponse;
 import com.slack.api.model.File;
-import com.slack.api.model.view.ViewState;
 import hu.takefive.gimmeme.services.ImageFactory;
+import hu.takefive.gimmeme.services.UpdateViewBuilder;
+import hu.takefive.gimmeme.services.ViewFactory;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
-import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 
 @Service
@@ -40,6 +40,7 @@ public class SlackViewHandler {
       MessageShortcutPayload payload = req.getPayload();
       String teamId = payload.getTeam().getId();
       String channelId = payload.getChannel().getId();
+      logger.error("channelid: " + channelId);
       //TODO fix to handle the rest of the files in the message
       String fileType = payload.getMessage().getFiles().get(0).getFiletype();
 
@@ -74,47 +75,29 @@ public class SlackViewHandler {
   }
 
   public Response handleSelectFontView(BlockActionRequest req, Context ctx) {
-    Logger logger = ctx.logger;
 
-    try {
-      String actionId = req.getPayload().getActions().get(0).getActionId();
-      String privateMetadataString = req.getPayload().getView().getPrivateMetadata();
+    return updateView(req, ctx, "actionId", ViewFactory.buildSelectFontView);
+  }
 
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadataString, HashMap.class);
-      privateMetadataMap.put("actionId", actionId);
-      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
+  public Response handleSelectFontSizeView(BlockActionRequest req, Context ctx) {
 
-      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
-              .viewsUpdate(r -> r
-                  .viewId(req.getPayload().getView().getId())
-                  .view(buildSelectFontView(privateMetadataJson))
-              );
-      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
-
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
-
-    return ctx.ack();
+    return updateView(req, ctx, "fontName", ViewFactory.buildSelectFontSizeView);
   }
 
   public Response handleInputTextView(BlockActionRequest req, Context ctx) {
+
+    return updateView(req, ctx, "fontSize", ViewFactory.buildInputTextView);
+  }
+
+  private Response updateView(BlockActionRequest req, Context ctx, String actionId, UpdateViewBuilder<String> viewBuilder) {
     Logger logger = ctx.logger;
-
     try {
-      String privateMetadata = req.getPayload().getView().getPrivateMetadata();
-      String fontName = req.getPayload().getActions().get(0).getActionId();
-
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadata, HashMap.class);
-      privateMetadataMap.put("fontName", fontName);
-      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
+      String privateMetadataJson = getUpdatedPrivateMetadata(req, actionId);
 
       ViewsUpdateResponse viewsUpdateResponse = ctx.client()
           .viewsUpdate(r -> r
               .viewId(req.getPayload().getView().getId())
-              .view(buildInputTextView(privateMetadataJson))
+              .view(viewBuilder.buildUpdateView(privateMetadataJson))
           );
       logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
@@ -128,10 +111,6 @@ public class SlackViewHandler {
   public Response handleViewSubmission(ViewSubmissionRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    String privateMetadata = req.getPayload().getView().getPrivateMetadata();
-    Map<String, Map<String, ViewState.Value>> stateValues = req.getPayload().getView().getState().getValues();
-    String text = stateValues.get("text-block").get("text-input").getValue();
-
     //TODO figure this out
 //    Map<String, String> errors = new HashMap<>();
 //    if (!errors.isEmpty()) {
@@ -139,8 +118,11 @@ public class SlackViewHandler {
 //    } else {
 
       try {
+        String privateMetadata = req.getPayload().getView().getPrivateMetadata();
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
+        Map submissionData = objectMapper.readValue(privateMetadata, Map.class);
+
+        String text = req.getPayload().getView().getState().getValues().get("text-block").get("text-input").getValue();
 
         //TODO: get font size from view
         Thread memGenThread = new Thread(() -> {
@@ -161,6 +143,22 @@ public class SlackViewHandler {
       }
 
       return ctx.ack();
+    }
+
+    private String getUpdatedPrivateMetadata(BlockActionRequest req, String key)
+        throws JsonProcessingException {
+      String privateMetadata = req.getPayload().getView().getPrivateMetadata();
+      BlockActionPayload.Action action = req.getPayload().getActions().get(0);
+      System.out.println("action type: " + action.getType());
+      String actionId = action.getType() == "static_select"
+          ? action.getSelectedOption().getValue()
+          : action.getActionId();
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
+      privateMetadataMap.put(key, actionId);
+
+      return objectMapper.writeValueAsString(privateMetadataMap);
     }
 
   }
