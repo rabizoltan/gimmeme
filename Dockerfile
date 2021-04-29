@@ -7,8 +7,6 @@ COPY build.gradle gradlew settings.gradle $APP_HOME
 COPY gradle gradle
 
 RUN sh ./gradlew build -x bootJar -x test --continue
-RUN apt-get install libfreetype6
-
 
 COPY src src
 
@@ -17,5 +15,6 @@ RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest
 FROM openjdk:11.0-jre-slim-buster
 VOLUME /tmp
 COPY --from=build /usr/app/build/libs/*.jar app.jar
+RUN apt-get install libfreetype6
 
 ENTRYPOINT ["java", "-jar", "/app.jar"]
