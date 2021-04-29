@@ -1,15 +1,10 @@
 package hu.takefive.gimmeme.services;
 
-import com.slack.api.model.ModelConfigurator;
-import com.slack.api.model.block.ImageBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
 import hu.takefive.gimmeme.models.HelpText;
 
-import static com.slack.api.model.block.Blocks.*;
-import static com.slack.api.model.block.composition.BlockCompositions.*;
-import static com.slack.api.model.block.element.BlockElements.*;
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.Blocks.asBlocks;
 import static com.slack.api.model.block.Blocks.divider;
@@ -39,7 +34,7 @@ public class ViewFactory {
 
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+        image(imageElementBuilder -> imageElementBuilder
             .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c").altText("layout-1")),
         actions(actions -> actions
             .elements(asElements(
@@ -48,7 +43,7 @@ public class ViewFactory {
             ))
         ),
         divider(),
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+        image(imageElementBuilder -> imageElementBuilder
             .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6").altText("layout-2")),
         actions(actions -> actions
             .elements(asElements(
@@ -68,7 +63,7 @@ public class ViewFactory {
       .privateMetadata(privateMetaData)
       .blocks(asBlocks(
           //TODO implement logic to upload layout-templates (no hardcoding here!)
-          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+          image(imageElementBuilder -> imageElementBuilder
               .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605").altText("font-1")),
           actions(actions -> actions
               .elements(asElements(
@@ -83,7 +78,7 @@ public class ViewFactory {
               ))
           ),
           divider(),
-          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
+          image(imageElementBuilder -> imageElementBuilder
               .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325").altText("font-2")),
           actions(actions -> actions
               .elements(asElements(
@@ -142,8 +137,6 @@ public class ViewFactory {
           section(s -> s.text(markdownText(errorMessage)))
       ))
       .build();
-
-
 
   public static View helpView() {
     View view = new View();

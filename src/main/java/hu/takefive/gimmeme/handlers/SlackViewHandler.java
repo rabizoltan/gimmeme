@@ -26,11 +26,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.Map;
 
-import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 
 @Service
 @AllArgsConstructor
@@ -63,11 +60,14 @@ public class SlackViewHandler {
 
         if (!filesSharedPublicURLResponse.isOk()) {
           uploadedFile = payload.getMessage().getFiles().get(0);
+          logger.info(payload.getMessage().getFiles().get(0).toString());
         } else {
           uploadedFile = filesSharedPublicURLResponse.getFile();
         }
-        //TODO bug: cannot handle numbers and spaces in filename ???
-        String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
+
+         String permaLinkPublic = uploadedFile.getUrlPrivateDownload()
+            + "?pub_secret="
+            + uploadedFile.getPermalinkPublic().replaceAll(".+\\-([^\\-]+)$", "$1");
 
         ViewsOpenResponse viewsOpenResponse = ctx.client()
             .viewsOpen(r -> r
