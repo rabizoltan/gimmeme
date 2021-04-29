@@ -7,6 +7,8 @@ COPY build.gradle gradlew settings.gradle $APP_HOME
 COPY gradle gradle
 
 RUN sh ./gradlew build -x bootJar -x test --continue
+RUN yum install libfreetype6
+
 
 COPY src src
 
