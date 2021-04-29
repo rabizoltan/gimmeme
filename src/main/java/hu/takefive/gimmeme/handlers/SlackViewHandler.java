@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.interactive_components.payload.MessageShortcutPayload;
+import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload;
 import com.slack.api.bolt.context.Context;
 import com.slack.api.bolt.request.builtin.BlockActionRequest;
 import com.slack.api.bolt.request.builtin.GlobalShortcutRequest;
 import com.slack.api.bolt.request.builtin.MessageShortcutRequest;
+import com.slack.api.bolt.request.builtin.SlashCommandRequest;
 import com.slack.api.bolt.request.builtin.ViewSubmissionRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
@@ -28,6 +30,7 @@ import java.util.Map;
 
 import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
+import static hu.takefive.gimmeme.services.ViewFactory.buildSelectImageView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
@@ -37,6 +40,29 @@ import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 public class SlackViewHandler {
 
   SlackFileHandler slackFileHandler;
+
+  public Response handleSelectImageView(SlashCommandRequest req, Context ctx) {
+    Logger logger = ctx.logger;
+
+    try {
+      SlashCommandPayload payload = req.getPayload();
+      String channelId = payload.getChannelId();
+      String teamId = payload.getTeamId();
+
+      ViewsOpenResponse viewsOpenResponse = ctx.client()
+          .viewsOpen(r -> r
+              .token(System.getenv("SLACK_BOT_TOKEN"))
+              .triggerId(payload.getTriggerId())
+              .view(buildSelectImageView(channelId, teamId))
+          );
+      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
+
+    return ctx.ack();
+  }
 
   public Response handleSelectLayoutView(MessageShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
@@ -85,6 +111,33 @@ public class SlackViewHandler {
       }
     });
     viewCreateThread.start();
+
+    return ctx.ack();
+  }
+
+  public Response handleSelectLayoutView(BlockActionRequest req, Context ctx) {
+    Logger logger = ctx.logger;
+
+    try {
+      BlockActionPayload payload = req.getPayload();
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map<String, String> privateMetadataMap = objectMapper.readValue(payload.getView().getPrivateMetadata(), Map.class);
+      String channelId = privateMetadataMap.get("channelId");
+
+      BlockActionPayload.Action action = payload.getActions().get(0);
+      String fileType = action.getActionId().substring(action.getActionId().length() - 3);
+      String permaLinkPublic = action.getValue();
+
+      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
+          .viewsUpdate(r -> r
+              .viewId(req.getPayload().getView().getId())
+              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
+          );
+      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
 
     return ctx.ack();
   }

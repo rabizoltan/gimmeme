@@ -23,10 +23,17 @@ public class SlackAppConfig {
 
     app.command("/listfiles", slackFileHandler::listFiles);
     app.command("/uploadfiles", slackFileHandler::uploadFiles);
+    app.command("/gimmeme", slackViewHandler::handleSelectImageView);
 
     app.messageShortcut("Gimmeme!", slackViewHandler::handleSelectLayoutView);
     app.messageShortcut("Gimmehelp!", slackViewHandler::handleHelpLayout);
+
     app.globalShortcut("Gimmehelp!", slackViewHandler::handleHelpLayout);
+
+    app.blockAction("1.jpg", slackViewHandler::handleSelectLayoutView);
+    app.blockAction("2.png", slackViewHandler::handleSelectLayoutView);
+    app.blockAction("3.jpg", slackViewHandler::handleSelectLayoutView);
+    app.blockAction("4.jpg", slackViewHandler::handleSelectLayoutView);
 
     app.blockAction("text-top", slackViewHandler::handleSelectFontView);
     app.blockAction("text-bottom", slackViewHandler::handleSelectFontView);
