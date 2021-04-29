@@ -14,7 +14,7 @@ public class ImageFactory {
 
   public static final int TEXT_ZOOM = 8;
 
-  public static File writeTextToImage(String url, String templateName, String fontName, String text) {
+  public static File writeTextToImage(String url, String fileType, String templateName, String fontName, String fontSize, String text) {
     File outputFile = null;
 
     try {
@@ -28,11 +28,11 @@ public class ImageFactory {
         text = text.replaceAll(textParts[0] + " *\n *", "");
         templateName = "text-bottom";
 
-        Image textImage = getTextImage(image, "text-top", fontName, textParts[0]);
+        Image textImage = getTextImage(image, "text-top", fontName, fontSize, textParts[0]);
         g2dImage.drawImage(textImage, 0,0, null);
       }
 
-      Image textImage = getTextImage(image, templateName, fontName, text);
+      Image textImage = getTextImage(image, templateName, fontName, fontSize, text);
       g2dImage.drawImage(textImage, 0,0, null);
       g2dImage.dispose();
 
@@ -46,7 +46,7 @@ public class ImageFactory {
     return outputFile;
   }
 
-  private static Image getTextImage(BufferedImage image, String actionId, String fontName, String text) {
+  private static Image getTextImage(BufferedImage image, String actionId, String fontName, String fontSize, String text) {
     BufferedImage textImage = new BufferedImage(
         image.getWidth() * ImageFactory.TEXT_ZOOM,
         image.getHeight() * ImageFactory.TEXT_ZOOM,
@@ -58,21 +58,21 @@ public class ImageFactory {
     Graphics2D g2dText = textImage.createGraphics();
 
     int maxTextWidth = (int) (textImage.getWidth() * textTemplate.getMaxWidth());
-    int maxTextHeight = (int) (textImage.getHeight() * textTemplate.getMaxHeight());
-    float fontSize = getFontSize(g2dText, maxTextWidth, maxTextHeight, font, text);
-    g2dText.setFont(font.deriveFont(font.getStyle(), fontSize));
+    int maxTextHeight = (int) (textImage.getHeight() * textTemplate.getMaxHeight(fontSize));
+    float actualFontSize = getFontSize(g2dText, maxTextWidth, maxTextHeight, font, text);
+    g2dText.setFont(font.deriveFont(font.getStyle(), actualFontSize));
 
     FontMetrics fm = g2dText.getFontMetrics();
     int stringWidth = fm.stringWidth(text);
     int textPosX = getXPosition(textImage.getWidth(), stringWidth, textTemplate);
     int textPosY = getYPosition(textImage.getHeight(), fm.getHeight(), fm.getAscent(), textTemplate);
 
-    int[] bgShape = getTextBackgroundShape(g2dText, fm, stringWidth, textPosX, textPosY);
+    int[] bgShape = getTextBackgroundShape(text, g2dText, fm, stringWidth, textPosX, textPosY);
     boolean isBgDark = isImageDark(image, bgShape);
 
     int textBgColor = isBgDark ? 0 : 255;
-    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 64));
-    g2dText.fillRect(bgShape[0], bgShape[1], bgShape[2], bgShape[3]);
+    g2dText.setColor(new Color(textBgColor, textBgColor, textBgColor, 90));
+    g2dText.fillRoundRect(bgShape[0], bgShape[1], bgShape[2], bgShape[3], bgShape[4], bgShape[4]);
 
     g2dText.setColor(isBgDark ? Color.WHITE : Color.BLACK);
     g2dText.drawString(text, textPosX, textPosY + fm.getAscent());
@@ -84,15 +84,23 @@ public class ImageFactory {
   }
 
   private static int[] getTextBackgroundShape(
+      String text,
       Graphics2D g2dText,
       FontMetrics fm,
       int stringWidth,
       int textPosX,
       int textPosY) {
     int bgOffsetX = (int) (stringWidth * 0.05f);
-    int bgOffsetY = (int) ((fm.getHeight() - fm.getAscent()) / 2);
+    float ascentMulti = text.matches(".*[qpgjy]+.*") ? 1.75f : 1.5f;
+    int bgOffsetY = fm.getHeight() / 2 - (int) (fm.getAscent() / ascentMulti);
 
-    return new int[]{textPosX - bgOffsetX, textPosY + bgOffsetY, stringWidth + 2 * bgOffsetX, fm.getHeight()};
+    return new int[]{
+        textPosX - bgOffsetX,
+        textPosY + bgOffsetY,
+        stringWidth + 2 * bgOffsetX,
+        fm.getHeight(),
+        fm.getHeight() / 3,
+    };
   }
 
   private static float getFontSize(Graphics2D g2dText, int maxTextWidth, int maxTextHeight, Font font, String text) {

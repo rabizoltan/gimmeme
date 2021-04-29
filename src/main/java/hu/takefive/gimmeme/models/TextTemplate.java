@@ -31,6 +31,7 @@ public enum TextTemplate {
       0.05f,
       "");
 
+  public static final float FONT_ZOOM_RATIO = 0.2f;
   public static final String TEMPLATE_BG_PATH = "src/main/resources/static/fonts/";
   public static final String TEMPLATE_PREVIEW_PATH = "src/main/resources/static/fonts/preview/";
 
@@ -82,6 +83,18 @@ public enum TextTemplate {
 
   public float getMaxHeight() {
     return maxHeight;
+  }
+
+  public float getMaxHeight(String fontSize) {
+
+    switch (fontSize) {
+      case "big":
+        return this.maxHeight * (1f + FONT_ZOOM_RATIO);
+      case "small":
+        return this.maxHeight * (1f - FONT_ZOOM_RATIO);
+    }
+
+    return this.maxHeight;
   }
 
   public float getPosTop() {

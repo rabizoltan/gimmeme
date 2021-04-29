@@ -27,6 +27,7 @@ import java.util.Map;
 import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
+import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 
 @Service
 @AllArgsConstructor
@@ -60,13 +61,39 @@ public class SlackViewHandler {
       String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
 
       ViewsOpenResponse viewsOpenResponse = ctx.client()
-              .viewsOpen(r -> r
-                      .token(System.getenv("SLACK_BOT_TOKEN"))
-                      .triggerId(payload.getTriggerId())
-                      .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
-              );
+          .viewsOpen(r -> r
+              .token(System.getenv("SLACK_BOT_TOKEN"))
+              .triggerId(payload.getTriggerId())
+              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
+          );
 
       logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+
+    } catch (IOException | SlackApiException e) {
+      logger.error("error: {}", e.getMessage(), e);
+    }
+
+    return ctx.ack();
+  }
+
+  public Response handleSelectFontView(BlockActionRequest req, Context ctx) {
+    Logger logger = ctx.logger;
+
+    try {
+      String actionId = req.getPayload().getActions().get(0).getActionId();
+      String privateMetadataString = req.getPayload().getView().getPrivateMetadata();
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadataString, HashMap.class);
+      privateMetadataMap.put("actionId", actionId);
+      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
+
+      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
+              .viewsUpdate(r -> r
+                  .viewId(req.getPayload().getView().getId())
+                  .view(buildSelectFontView(privateMetadataJson))
+              );
+      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
     } catch (IOException | SlackApiException e) {
       logger.error("error: {}", e.getMessage(), e);
@@ -79,18 +106,18 @@ public class SlackViewHandler {
     Logger logger = ctx.logger;
 
     try {
-      String privateMetaData = req.getPayload().getView().getPrivateMetadata();
-      String actionId = req.getPayload().getActions().get(0).getActionId();
+      String privateMetadata = req.getPayload().getView().getPrivateMetadata();
+      String fontName = req.getPayload().getActions().get(0).getActionId();
 
       ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, Object> privateMetaDataMap = objectMapper.readValue(privateMetaData, HashMap.class);
-      privateMetaDataMap.put("actionId", actionId);
-      String privateMetaDataJson = objectMapper.writeValueAsString(privateMetaDataMap);
+      Map<String, Object> privateMetadataMap = objectMapper.readValue(privateMetadata, HashMap.class);
+      privateMetadataMap.put("fontName", fontName);
+      String privateMetadataJson = objectMapper.writeValueAsString(privateMetadataMap);
 
       ViewsUpdateResponse viewsUpdateResponse = ctx.client()
           .viewsUpdate(r -> r
               .viewId(req.getPayload().getView().getId())
-              .view(buildInputTextView(privateMetaDataJson))
+              .view(buildInputTextView(privateMetadataJson))
           );
       logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
@@ -118,11 +145,14 @@ public class SlackViewHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
 
+        //TODO: get font size from view
         Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
               submissionData.get("imageUrl").toString(),
+              submissionData.get("fileType").toString(),
               submissionData.get("actionId").toString(),
-              "Arial",
+              submissionData.get("fontName").toString(),
+              submissionData.getOrDefault("fontSize", "").toString(),
               text
           );
           slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());
