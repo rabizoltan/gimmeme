@@ -10,10 +10,11 @@ RUN sh ./gradlew build -x bootJar -x test --continue
 
 COPY src src
 
-RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest
+RUN sh ./gradlew build -x checkstyleMain -x checkstyleTest -x test
 
-FROM openjdk:11.0-jre-slim-buster
+FROM openjdk:11.0
 VOLUME /tmp
+COPY src /usr/app/src
 COPY --from=build /usr/app/build/libs/*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "/app.jar"]

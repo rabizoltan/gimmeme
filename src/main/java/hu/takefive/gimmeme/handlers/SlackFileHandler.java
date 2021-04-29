@@ -87,7 +87,7 @@ public class SlackFileHandler {
 
   public static List<File> getStaticFileList() {
     List<File> result = new ArrayList<>();
-    File dir = new File("src/main/resources/static/images");
+    File dir = new File("usr/app/src/main/resources/static/images");
     File[] directoryListing = dir.listFiles();
 
     if (directoryListing != null) {
