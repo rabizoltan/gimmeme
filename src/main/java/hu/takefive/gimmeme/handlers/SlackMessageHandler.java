@@ -28,9 +28,13 @@ public class SlackMessageHandler {
     JsonObject jsonObject = new JsonObject();
     jsonObject.addProperty("channelId", req.getPayload().getChannelId());
     jsonObject.addProperty("text", ":sos: This app will help you to make some funny meme and be the best troll in the channel.\n" +
+            "\n" +
             "For a better guide interface click on the :zap: (Shortcuts) icon and select Gimmehelp! shortcut\n" +
+            "\n" +
             "You can send memes with given templates by type in the '/gimmeme' command and hit enter\n" +
-            "If you click on the 'More action' (...) button of a messages which contains a picture. Here you can select Gimmeme! shortcut and put some text on the picture and send it back\n");
+            "\n" +
+            "If you click on the 'More action' (...) button of a messages which contains a picture.\n" +
+            " Here you can select Gimmeme! shortcut and put some text on the picture and send it back\n");
     return ctx.ack(jsonObject);
   }
 
