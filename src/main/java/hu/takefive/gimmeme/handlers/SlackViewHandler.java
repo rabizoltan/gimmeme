@@ -142,12 +142,14 @@ public class SlackViewHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> submissionData = objectMapper.readValue(privateMetadata, HashMap.class);
 
+        //TODO: get font size from view
         Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
               submissionData.get("imageUrl").toString(),
               submissionData.get("fileType").toString(),
               submissionData.get("actionId").toString(),
               submissionData.get("fontName").toString(),
+              submissionData.getOrDefault("fontSize", "").toString(),
               text
           );
           slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());
