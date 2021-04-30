@@ -7,9 +7,6 @@ import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
 import hu.takefive.gimmeme.models.HelpText;
 
-import static com.slack.api.model.block.Blocks.*;
-import static com.slack.api.model.block.composition.BlockCompositions.*;
-import static com.slack.api.model.block.element.BlockElements.*;
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.Blocks.asBlocks;
 import static com.slack.api.model.block.Blocks.divider;
@@ -218,17 +215,22 @@ public class ViewFactory {
     view.setBlocks(asBlocks(
         divider(),
         section(section -> section.text(markdownText("These are the available commands in the GimMeme app:"))),
+        section(section -> section.text(plainText("/greetings"))),
         section(section -> section.text(plainText("/gimmehelp"))),
         section(section -> section.text(plainText("/gimmeme"))),
-        section(section -> section.text(plainText("/mittomeme"))),
+        section(section -> section.text(plainText("Gimmehelp shortcut"))),
+        section(section -> section.text(plainText("Gimmeme shortcut"))),
         divider(),
         section(section -> section.text(markdownText("Select a command for more information"))
             .accessory(staticSelect(staticSelect -> staticSelect
                 .actionId("command-selection-action")
                 .placeholder(plainText("Select..."))
                 .options(asOptions(
-                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
-                    option(plainText("/Gimmeme"), "GIMMEME")
+                    option(plainText("/greetings"), "GREETINGS"),
+                    option(plainText("/gimmehelp"), "GIMMEHELP"),
+                    option(plainText("/gimmeme"), "GIMMEME"),
+                    option(plainText("Gimmehelp shortcut"), "GIMMEHELPS"),
+                    option(plainText("Gimmeme shortcut"), "GIMMEMES")
                 ))
             )))
     ));
