@@ -251,8 +251,11 @@ public class ViewFactory {
                 .actionId("command-selection-action")
                 .placeholder(plainText("Select..."))
                 .options(asOptions(
-                    option(plainText("/Gimmehelp"), "GIMMEHELP"),
-                    option(plainText("/Gimmeme"), "GIMMEME")
+                        option(plainText("/greetings"), "GREETINGS"),
+                        option(plainText("/gimmehelp"), "GIMMEHELP"),
+                        option(plainText("/gimmeme"), "GIMMEME"),
+                        option(plainText("Gimmehelp shortcut"), "GIMMEHELPS"),
+                        option(plainText("Gimmeme shortcut"), "GIMMEMES")
                 ))
             )))
     ));
