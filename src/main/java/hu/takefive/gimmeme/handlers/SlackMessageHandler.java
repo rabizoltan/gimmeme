@@ -27,7 +27,7 @@ public class SlackMessageHandler {
   public Response basicHelp(SlashCommandRequest req, Context ctx) {
     JsonObject jsonObject = new JsonObject();
     jsonObject.addProperty("channelId", req.getPayload().getChannelId());
-    jsonObject.addProperty("text", ":sos: This app will help you to make some funny meme and be the best troll in the channel.\n" +
+    jsonObject.addProperty("text", ":sos: This app will help you to make some funny memes and be the best troll in the channel.\n" +
             "\n" +
             "For a better guide interface click on the :zap: (Shortcuts) icon and select Gimmehelp! shortcut\n" +
             "\n" +

@@ -83,8 +83,6 @@ public class ViewFactory {
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
         image(imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c").altText("layout-1")),
-        image(imageElementBuilder -> imageElementBuilder
             .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c")
             .altText("layout-1")),
         actions(actions -> actions
