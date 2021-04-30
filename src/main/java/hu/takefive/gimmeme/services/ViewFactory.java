@@ -42,11 +42,11 @@ public class ViewFactory {
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("1.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020UGQ5GC9/1.jpg?pub_secret=fa98aec0d0")),
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020B5WEAQN/download/1.jpg?pub_secret=248274ffb4")),
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("2.png")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020E0S5J93/2.png?pub_secret=e08ac164fe"))
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F0217PDQQ0G/download/2.png?pub_secret=c836a68c6b"))
             ))
         ),
         divider(),
@@ -58,11 +58,11 @@ public class ViewFactory {
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("3.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020H69DKU3/3.jpg?pub_secret=9a939c6a9b")),
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020J05L10A/download/3.jpg?pub_secret=6d8a84ac18")),
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("4.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F0216PSEPA4/4.jpg?pub_secret=125b2735e0"))
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020WJAQGD7/download/4.jpg?pub_secret=f4450186a2"))
             ))
         )
     ));
