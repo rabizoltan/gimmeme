@@ -28,12 +28,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.Map;
 
-import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectImageView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 
 @Service
 @AllArgsConstructor
@@ -44,34 +41,37 @@ public class SlackViewHandler {
   public Response handleSelectImageView(SlashCommandRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    try {
-      SlashCommandPayload payload = req.getPayload();
-      String channelId = payload.getChannelId();
-      String teamId = payload.getTeamId();
+    Thread viewOpenThread = new Thread(() -> {
+      try {
+        SlashCommandPayload payload = req.getPayload();
+        String channelId = payload.getChannelId();
+        String teamId = payload.getTeamId();
 
-      ViewsOpenResponse viewsOpenResponse = ctx.client()
-          .viewsOpen(r -> r
-              .token(System.getenv("SLACK_BOT_TOKEN"))
-              .triggerId(payload.getTriggerId())
-              .view(buildSelectImageView(channelId, teamId))
-          );
-      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+        ViewsOpenResponse viewsOpenResponse = ctx.client()
+            .viewsOpen(r -> r
+                .token(System.getenv("SLACK_BOT_TOKEN"))
+                .triggerId(payload.getTriggerId())
+                .view(buildSelectImageView(channelId, teamId))
+            );
+        logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+    });
+    viewOpenThread.start();
 
     return ctx.ack();
   }
 
   public Response handleSelectLayoutView(MessageShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
+
     Thread viewCreateThread = new Thread(() -> {
       File uploadedFile;
       MessageShortcutPayload payload = req.getPayload();
 
       try {
-        String teamId = payload.getTeam().getId();
         String channelId = payload.getChannel().getId();
 
         //TODO fix to handle the rest of the files in the message
@@ -92,8 +92,10 @@ public class SlackViewHandler {
         } else {
           uploadedFile = filesSharedPublicURLResponse.getFile();
         }
-        //TODO bug: cannot handle numbers and spaces in filename ???
-        String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
+
+         String permaLinkPublic = uploadedFile.getUrlPrivateDownload()
+            + "?pub_secret="
+            + uploadedFile.getPermalinkPublic().replaceAll(".+\\-([^\\-]+)$", "$1");
 
         ViewsOpenResponse viewsOpenResponse = ctx.client()
             .viewsOpen(r -> r
@@ -118,26 +120,29 @@ public class SlackViewHandler {
   public Response handleSelectLayoutView(BlockActionRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    try {
-      BlockActionPayload payload = req.getPayload();
-      ObjectMapper objectMapper = new ObjectMapper();
-      Map<String, String> privateMetadataMap = objectMapper.readValue(payload.getView().getPrivateMetadata(), Map.class);
-      String channelId = privateMetadataMap.get("channelId");
+    Thread viewSelectThread = new Thread(() -> {
+      try {
+        BlockActionPayload payload = req.getPayload();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> privateMetadataMap = objectMapper.readValue(payload.getView().getPrivateMetadata(), Map.class);
+        String channelId = privateMetadataMap.get("channelId");
 
-      BlockActionPayload.Action action = payload.getActions().get(0);
-      String fileType = action.getActionId().substring(action.getActionId().length() - 3);
-      String permaLinkPublic = action.getValue();
+        BlockActionPayload.Action action = payload.getActions().get(0);
+        String fileType = action.getActionId().substring(action.getActionId().length() - 3);
+        String permaLinkPublic = action.getValue();
 
-      ViewsUpdateResponse viewsUpdateResponse = ctx.client()
-          .viewsUpdate(r -> r
-              .viewId(req.getPayload().getView().getId())
-              .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
-          );
-      logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
+        ViewsUpdateResponse viewsUpdateResponse = ctx.client()
+            .viewsUpdate(r -> r
+                .viewId(req.getPayload().getView().getId())
+                .view(buildSelectLayoutView(permaLinkPublic, channelId, fileType))
+            );
+        logger.info("viewsUpdateResponse: {}", viewsUpdateResponse);
 
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+    });
+    viewSelectThread.start();
 
     return ctx.ack();
   }
@@ -180,7 +185,7 @@ public class SlackViewHandler {
     return ctx.ack();
   }
 
-  private Response sendErrorView(Context ctx, String triggerId, String errorMessage, UpdateViewBuilder<String> viewBuilder) {
+  private void sendErrorView(Context ctx, String triggerId, String errorMessage, UpdateViewBuilder<String> viewBuilder) {
     Logger logger = ctx.logger;
 
       try {
@@ -196,7 +201,7 @@ public class SlackViewHandler {
         logger.error("error: {}", e.getMessage(), e);
       }
 
-    return ctx.ack();
+    ctx.ack();
   }
 
   private String getUpdatedPrivateMetadata(BlockActionRequest req, String key)
@@ -209,7 +214,7 @@ public class SlackViewHandler {
         : action.getActionId();
 
     ObjectMapper objectMapper = new ObjectMapper();
-    Map privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
+    Map<String, String> privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
     privateMetadataMap.put(key, actionId);
 
     return objectMapper.writeValueAsString(privateMetadataMap);
@@ -218,84 +223,81 @@ public class SlackViewHandler {
   public Response handleViewSubmission(ViewSubmissionRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    //TODO figure this out
-//    Map<String, String> errors = new HashMap<>();
-//    if (!errors.isEmpty()) {
-//      return ctx.ack(r -> r.responseAction("errors").errors(errors));
-//    } else {
-
+    Thread viewSubmitThread = new Thread(() -> {
       try {
         String privateMetadata = req.getPayload().getView().getPrivateMetadata();
         ObjectMapper objectMapper = new ObjectMapper();
-        Map submissionData = objectMapper.readValue(privateMetadata, Map.class);
+        Map<String, String> submissionData = objectMapper.readValue(privateMetadata, Map.class);
 
         String text = req.getPayload().getView().getState().getValues().get("text-block").get("text-input").getValue();
 
-        //TODO: get font size from view
-        Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
-              submissionData.get("imageUrl").toString(),
-              submissionData.get("fileType").toString(),
-              submissionData.get("actionId").toString(),
-              submissionData.get("fontName").toString(),
-              submissionData.getOrDefault("fontSize", "").toString(),
+              submissionData.get("imageUrl"),
+              submissionData.get("fileType"),
+              submissionData.get("actionId"),
+              submissionData.get("fontName"),
+              submissionData.getOrDefault("fontSize", ""),
               text
           );
-          slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());
-        });
-        memGenThread.start();
+          slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId"));
 
       } catch (IOException e) {
         logger.error("error: {}", e.getMessage(), e);
       }
+    });
+    viewSubmitThread.start();
 
-      return ctx.ack();
-    }
+    return ctx.ack();
+  }
 
   public Response handleHelpLayout(MessageShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    try {
-      MessageShortcutPayload payload = req.getPayload();
+    Thread viewHelpThread = new Thread(() -> {
+      try {
+        MessageShortcutPayload payload = req.getPayload();
 
-      ViewsOpenResponse viewsOpenResponse = ctx.client()
-              .viewsOpen(r -> r
-                      .token(System.getenv("SLACK_BOT_TOKEN"))
-                      .triggerId(payload.getTriggerId())
-                      .view(helpView())
-              );
+        ViewsOpenResponse viewsOpenResponse = ctx.client()
+                .viewsOpen(r -> r
+                        .token(System.getenv("SLACK_BOT_TOKEN"))
+                        .triggerId(payload.getTriggerId())
+                        .view(helpView())
+                );
 
-      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+        logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+    });
+    viewHelpThread.start();
 
     return ctx.ack();
-
   }
 
   public Response handleHelpLayout(GlobalShortcutRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    try {
-      GlobalShortcutPayload payload = req.getPayload();
+    Thread viewHelpThread = new Thread(() -> {
+      try {
+        GlobalShortcutPayload payload = req.getPayload();
 
-      ViewsOpenResponse viewsOpenResponse = ctx.client()
-              .viewsOpen(r -> r
-                      .token(System.getenv("SLACK_BOT_TOKEN"))
-                      .triggerId(payload.getTriggerId())
-                      .view(helpView())
-              );
+        ViewsOpenResponse viewsOpenResponse = ctx.client()
+                .viewsOpen(r -> r
+                        .token(System.getenv("SLACK_BOT_TOKEN"))
+                        .triggerId(payload.getTriggerId())
+                        .view(helpView())
+                );
 
-      logger.info("viewsOpenResponse: {}", viewsOpenResponse);
+        logger.info("viewsOpenResponse: {}", viewsOpenResponse);
 
-    } catch (IOException | SlackApiException e) {
-      logger.error("error: {}", e.getMessage(), e);
-    }
+      } catch (IOException | SlackApiException e) {
+        logger.error("error: {}", e.getMessage(), e);
+      }
+    });
+    viewHelpThread.start();
 
     return ctx.ack();
-
   }
 
-  }
+}

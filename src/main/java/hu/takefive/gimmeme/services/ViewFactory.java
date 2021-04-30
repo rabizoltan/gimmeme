@@ -1,7 +1,5 @@
 package hu.takefive.gimmeme.services;
 
-import com.slack.api.model.ModelConfigurator;
-import com.slack.api.model.block.ImageBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewTitle;
@@ -36,35 +34,35 @@ public class ViewFactory {
 
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F0216NNVD0Q/pic-template-one.png?pub_secret=3496f63ca7")
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F020J88UE9H/download/pic-template-two.png?pub_secret=e529fe7052")
             .altText("image-1")),
         actions(actions -> actions
             .elements(asElements(
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("1.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020UGQ5GC9/1.jpg?pub_secret=fa98aec0d0")),
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020WK6DADP/download/1.jpg?pub_secret=5933b4b236")),
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("2.png")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6"))
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020B857Z46/download/2.png?pub_secret=aa6313e376"))
             ))
         ),
         divider(),
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020A5PK60N/pic-template-two.png?pub_secret=6e18565c57")
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F02038NS1F1/download/pic-template-one.png?pub_secret=c3d64b712c")
             .altText("image-2")),
         actions(actions -> actions
             .elements(asElements(
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("3.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F020H69DKU3/3.jpg?pub_secret=9a939c6a9b")),
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020Q6DLE5S/download/3.jpg?pub_secret=6df3159ee0")),
                 button(b -> b.text(plainText(pt -> pt.emoji(true)
                     .text("Gimme this template!")))
                     .actionId("4.jpg")
-                    .value("https://slack-files.com/files-pri/T0202GRF98C-F0216PSEPA4/4.jpg?pub_secret=125b2735e0"))
+                    .value("https://files.slack.com/files-pri/T0202GRF98C-F020J1Q0NAE/download/4.jpg?pub_secret=1cd13f7316"))
             ))
         )
     ));
@@ -84,8 +82,8 @@ public class ViewFactory {
 
     view.setBlocks(asBlocks(
         //TODO implement logic to upload layout-templates (no hardcoding here!)
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F02125P9ABS/template-1.png?pub_secret=c97cadee4c")
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F020WL7D17B/download/template-1.png?pub_secret=191a7b60e3")
             .altText("layout-1")),
         actions(actions -> actions
             .elements(asElements(
@@ -100,8 +98,8 @@ public class ViewFactory {
             ))
         ),
         divider(),
-        image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-            .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F01VBJ5GWT1/template-2.png?pub_secret=d8aa31cce6")
+        image(imageElementBuilder -> imageElementBuilder
+            .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F0217RSAF88/download/template-2.png?pub_secret=6747219740")
             .altText("layout-2")),
         actions(actions -> actions
             .elements(asElements(
@@ -127,8 +125,8 @@ public class ViewFactory {
       .privateMetadata(privateMetaData)
       .blocks(asBlocks(
           //TODO implement logic to upload layout-templates (no hardcoding here!)
-          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF2BC4S/gimmeme-char-chooser-one.png?pub_secret=11931ca605")
+          image(imageElementBuilder -> imageElementBuilder
+              .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F0217RC4QAU/download/gimmeme-char-chooser-one.png?pub_secret=f13efbebf2")
               .altText("font-1")),
           actions(actions -> actions
               .elements(asElements(
@@ -143,8 +141,8 @@ public class ViewFactory {
               ))
           ),
           divider(),
-          image((ModelConfigurator<ImageBlock.ImageBlockBuilder>) imageElementBuilder -> imageElementBuilder
-              .imageUrl("https://slack-files.com/files-pri/T0202GRF98C-F020CF66RBL/gimmeme-char-chooser-two.png?pub_secret=b8c9ca1325")
+          image(imageElementBuilder -> imageElementBuilder
+              .imageUrl("https://files.slack.com/files-pri/T0202GRF98C-F020EUZRH2R/download/gimmeme-char-chooser-two.png?pub_secret=2e004630c8")
               .altText("font-2")),
           actions(actions -> actions
               .elements(asElements(
@@ -203,8 +201,6 @@ public class ViewFactory {
           section(s -> s.text(markdownText(errorMessage)))
       ))
       .build();
-
-
 
   public static View helpView() {
     View view = new View();

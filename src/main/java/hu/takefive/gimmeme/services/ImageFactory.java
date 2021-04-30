@@ -8,6 +8,8 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
 
@@ -28,8 +30,7 @@ public class ImageFactory {
     File outputFile = null;
 
     try {
-      URL imageUrl = new URL(url);
-      BufferedImage image = ImageIO.read(imageUrl);
+      BufferedImage image = downloadImage(url);
 
       Graphics2D g2dImage = image.createGraphics();
       String[] textParts = text.split(" *\n *");
@@ -51,9 +52,29 @@ public class ImageFactory {
     }
     catch (Exception e) {
       log.error(String.valueOf(e));
+      log.error(url);
     }
 
     return outputFile;
+  }
+
+  private static BufferedImage downloadImage(String url) throws IOException {
+    BufferedImage image = null;
+    URL imageUrl = new URL(url);
+    HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+    try {
+      connection.setRequestProperty(
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:37.0) Gecko/20100101 Firefox/37.0");
+      image = ImageIO.read(connection.getInputStream());
+
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to load remote file: " + url, e);
+    } finally {
+      connection.disconnect();
+    }
+
+    return image;
   }
 
   private static Image getTextImage(BufferedImage image, String actionId, String fontName, String fontSize, String text) {
@@ -100,12 +121,12 @@ public class ImageFactory {
       int stringWidth,
       int textPosX,
       int textPosY) {
-    int bgOffsetX = (int) (stringWidth * 0.05f);
+    int bgOffsetX = (int) (stringWidth * 0.025f);
     float ascentMulti = text.matches(".*[qpgjy]+.*") ? 1.75f : 1.5f;
     int bgOffsetY = fm.getHeight() / 2 - (int) (fm.getAscent() / ascentMulti);
 
     return new int[]{
-        textPosX - bgOffsetX,
+        textPosX < bgOffsetX ? 0 : textPosX - bgOffsetX,
         textPosY + bgOffsetY,
         stringWidth + 2 * bgOffsetX,
         fm.getHeight(),
@@ -163,12 +184,19 @@ public class ImageFactory {
     int pixelCounter = 0;
     float luminance = 0f;
 
-    for (int x = (int) bgShape[0] / TEXT_ZOOM; x < (bgShape[0] + bgShape[2]) / TEXT_ZOOM; x += 10) {
-      for (int y = (int) bgShape[1] / TEXT_ZOOM; y < (bgShape[1] + bgShape[3]) / TEXT_ZOOM; y += 10) {
+    int shapeRightX = (bgShape[0] + bgShape[2]) / TEXT_ZOOM;
+    int shapeBottomY = (bgShape[1] + bgShape[3]) / TEXT_ZOOM;
+
+    for (int x = (int) bgShape[0] / TEXT_ZOOM;
+         x < shapeRightX && x < image.getWidth();
+         x += 10) {
+      for (int y = (int) bgShape[1] / TEXT_ZOOM;
+           y < shapeBottomY && y < image.getHeight();
+           y += 10) {
         int color = image.getRGB(x, y);
         int red   = (color >>> 16) & 0xFF;
         int green = (color >>>  8) & 0xFF;
-        int blue  = (color >>>  0) & 0xFF;
+        int blue  = (color) & 0xFF;
 
         // calc luminance in range 0.0 to 1.0; using sRGB luminance constants
         luminance += (red * 0.2126f + green * 0.7152f + blue * 0.0722f) / 255;
