@@ -28,12 +28,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.Map;
 
-import static hu.takefive.gimmeme.services.ViewFactory.buildInputTextView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectImageView;
 import static hu.takefive.gimmeme.services.ViewFactory.buildSelectLayoutView;
 import static hu.takefive.gimmeme.services.ViewFactory.helpView;
-import static hu.takefive.gimmeme.services.ViewFactory.buildSelectFontView;
 
 @Service
 @AllArgsConstructor
@@ -71,7 +68,6 @@ public class SlackViewHandler {
       MessageShortcutPayload payload = req.getPayload();
 
       try {
-        String teamId = payload.getTeam().getId();
         String channelId = payload.getChannel().getId();
 
         //TODO fix to handle the rest of the files in the message
@@ -92,8 +88,10 @@ public class SlackViewHandler {
         } else {
           uploadedFile = filesSharedPublicURLResponse.getFile();
         }
-        //TODO bug: cannot handle numbers and spaces in filename ???
-        String permaLinkPublic = String.format("https://slack-files.com/files-pri/%s-%s/%s?pub_secret=%s", teamId, uploadedFile.getId(), uploadedFile.getName(), uploadedFile.getPermalinkPublic().substring(uploadedFile.getPermalinkPublic().length() - 10));
+
+         String permaLinkPublic = uploadedFile.getUrlPrivateDownload()
+            + "?pub_secret="
+            + uploadedFile.getPermalinkPublic().replaceAll(".+\\-([^\\-]+)$", "$1");
 
         ViewsOpenResponse viewsOpenResponse = ctx.client()
             .viewsOpen(r -> r
@@ -180,7 +178,7 @@ public class SlackViewHandler {
     return ctx.ack();
   }
 
-  private Response sendErrorView(Context ctx, String triggerId, String errorMessage, UpdateViewBuilder<String> viewBuilder) {
+  private void sendErrorView(Context ctx, String triggerId, String errorMessage, UpdateViewBuilder<String> viewBuilder) {
     Logger logger = ctx.logger;
 
       try {
@@ -196,7 +194,7 @@ public class SlackViewHandler {
         logger.error("error: {}", e.getMessage(), e);
       }
 
-    return ctx.ack();
+    ctx.ack();
   }
 
   private String getUpdatedPrivateMetadata(BlockActionRequest req, String key)
@@ -209,7 +207,7 @@ public class SlackViewHandler {
         : action.getActionId();
 
     ObjectMapper objectMapper = new ObjectMapper();
-    Map privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
+    Map<String, String> privateMetadataMap = objectMapper.readValue(privateMetadata, Map.class);
     privateMetadataMap.put(key, actionId);
 
     return objectMapper.writeValueAsString(privateMetadataMap);
@@ -218,30 +216,23 @@ public class SlackViewHandler {
   public Response handleViewSubmission(ViewSubmissionRequest req, Context ctx) {
     Logger logger = ctx.logger;
 
-    //TODO figure this out
-//    Map<String, String> errors = new HashMap<>();
-//    if (!errors.isEmpty()) {
-//      return ctx.ack(r -> r.responseAction("errors").errors(errors));
-//    } else {
-
       try {
         String privateMetadata = req.getPayload().getView().getPrivateMetadata();
         ObjectMapper objectMapper = new ObjectMapper();
-        Map submissionData = objectMapper.readValue(privateMetadata, Map.class);
+        Map<String, String> submissionData = objectMapper.readValue(privateMetadata, Map.class);
 
         String text = req.getPayload().getView().getState().getValues().get("text-block").get("text-input").getValue();
 
-        //TODO: get font size from view
         Thread memGenThread = new Thread(() -> {
           java.io.File file = ImageFactory.writeTextToImage(
-              submissionData.get("imageUrl").toString(),
-              submissionData.get("fileType").toString(),
-              submissionData.get("actionId").toString(),
-              submissionData.get("fontName").toString(),
-              submissionData.getOrDefault("fontSize", "").toString(),
+              submissionData.get("imageUrl"),
+              submissionData.get("fileType"),
+              submissionData.get("actionId"),
+              submissionData.get("fontName"),
+              submissionData.getOrDefault("fontSize", ""),
               text
           );
-          slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId").toString());
+          slackFileHandler.uploadFile(ctx, file, submissionData.get("channelId"));
         });
         memGenThread.start();
 
@@ -298,4 +289,4 @@ public class SlackViewHandler {
 
   }
 
-  }
+}
